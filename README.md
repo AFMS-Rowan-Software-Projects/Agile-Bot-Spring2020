@@ -1,0 +1,2 @@
+# Agile-Bot-Spring2020
+The team will develop a Discord Bot to assist the ASRC Federal Mission Solutions staff obtain metrics from our programs that are developed with the Agile methodology. The Team will develop a webhook into Trello that will allow staff to make inquiries on the status of various software development activities and projects. The team will evaluate the features of Discord and make recommendations to AFMS on best practices and implementation for the Bot.
