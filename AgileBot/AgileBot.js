@@ -1,3 +1,31 @@
+//firebase stuff
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const firebase = require("firebase");
+const serviceAccount = require("../FirebaseFunctions/functions/trello-webhhok-firebase-adminsdk-j1z1c-c2b447b35b.json");
+
+const config = {
+    apiKey: "AIzaSyDg2byr8D7-EGHbG7_xZ9YkYPWOgDp0PhA",
+    authDomain: "trello-webhhok.firebaseapp.com",
+    databaseURL: "https://trello-webhhok.firebaseio.com",
+    projectId: "trello-webhhok",
+}
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://trello-webhhok.firebaseio.com"
+});
+
+firebase.initializeApp(config);
+
+const db = admin.firestore();
+const fbAuth = firebase.auth();
+const fs = require('fs');
+
+
+
+
+
 // Load up the discord.js library
 const Discord = require("discord.js");
 
@@ -12,6 +40,27 @@ const auth = require("./auth.json");
 
 const prefix = require("./prefix.json");
 // prefix.prefix contains the bot's prefix
+
+var NOTIFY_CHANNEL;
+client.on('ready', () => {
+    NOTIFY_CHANNEL = client.channels.find('id', '680592567796105226'); // Channel to send notification
+});
+
+setInterval(async function() {
+    let theTrelloUpdates = [];
+    let theJSONsRef = db.collection('trelloUpdateTest');
+    let theJSONGrab = await theJSONsRef.get().then(snapshot => {
+        let trelloUpdates = snapshot.docs;
+        for (let i = 0; i < trelloUpdates.length; i++) {
+            const update = trelloUpdates[i].data();
+            theTrelloUpdates.push(update);
+        }
+        return;
+    }).catch(err => {
+        console.log("error", err);
+    });
+    NOTIFY_CHANNEL.sendMessage('I found ' + theTrelloUpdates.length + ' updates in the database');
+}, 60 * 1000); // Check every minute
 
 
 client.on("ready", () => {
@@ -42,10 +91,10 @@ client.on("message", async message => {
     // and not get into a spam loop (we call that "botception").
     message.channel.send(message.toString());
     if (message.author.bot) {
-
+        return;
     }
     else {
-        
+        //not a bot so can't get stuck in a loop
     } 
 
     // Also good practice to ignore any message that does not start with our prefix, 

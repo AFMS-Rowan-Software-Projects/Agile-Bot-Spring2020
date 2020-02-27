@@ -30,8 +30,14 @@ exports.webhookTest = functions.https.onRequest((request, response) => {
 
     //log any request body in the function logs
     console.log(request.body);
-    //push any request body into the firestore databse
-    db.collection('trelloUpdateTest').add(request.body);
+
+    //takes only post requests and pushes the body into the firestore database
+    if(request.method === "POST") {
+      if(request.body) {
+        db.collection('trelloUpdateTest').add(request.body);
+      }
+    }
+    
 
     //return the appropriate 200 statuse code for the webhook and a message
     return response.status(200).send("if there is a god, help me now");
