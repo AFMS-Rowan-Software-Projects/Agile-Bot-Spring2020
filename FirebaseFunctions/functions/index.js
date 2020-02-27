@@ -39,7 +39,7 @@ exports.webhookTest = functions.https.onRequest((request, response) => {
     }
     
 
-    //return the appropriate 200 statuse code for the webhook and a message
+    //return the appropriate 200 status code for the webhook and a message
     return response.status(200).send("if there is a god, help me now");
 
 });
