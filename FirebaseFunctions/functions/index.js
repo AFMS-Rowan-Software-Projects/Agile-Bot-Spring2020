@@ -24,7 +24,12 @@ const fs = require('fs');
 exports.webhookTest = functions.https.onRequest((request, response) => {
 
     console.log(request.body);
-    db.collection('trelloUpdateTest').add(request.body);
+    if(request.method === "POST") {
+      if(request.body) {
+        db.collection('trelloUpdateTest').add(request.body);
+      }
+    }
+    
 
     return response.status(200).send("if there is a god, help me now");
 
