@@ -42,10 +42,10 @@ client.on("message", async message => {
     // and not get into a spam loop (we call that "botception").
     message.channel.send(message.toString());
     if (message.author.bot) {
-
+        return;
     }
     else {
-        
+        //not a bot so can't get stuck in a loop
     } 
 
     // Also good practice to ignore any message that does not start with our prefix, 
