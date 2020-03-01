@@ -12,8 +12,8 @@ const config = {
 }
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://trello-webhhok.firebaseio.com"
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://trello-webhhok.firebaseio.com"
 });
 
 firebase.initializeApp(config);
@@ -42,28 +42,41 @@ const prefix = require("./prefix.json");
 // prefix.prefix contains the bot's prefix
 
 var NOTIFY_CHANNEL;
-client.on('ready', () => {
-    NOTIFY_CHANNEL = client.channels.find('id', '680592567796105226'); // Channel to send notification
-});
 
-setInterval(async function() {
+
+var interval = setInterval(async function () {
     let theTrelloUpdates = [];
     let theJSONsRef = db.collection('trelloUpdateTest');
     let theJSONGrab = await theJSONsRef.get().then(snapshot => {
-        let trelloUpdates = snapshot.docs;
-        for (let i = 0; i < trelloUpdates.length; i++) {
-            const update = trelloUpdates[i].data();
-            theTrelloUpdates.push(update);
-        }
-        return;
+        snapshot.docs.forEach((doc) => {
+            theTrelloUpdates.push(doc.data());
+            let theAdd = db.collection('archivedUpdates').add(doc.data());
+            let theDelete = db.collection('trelloUpdateTest').doc(doc.id).delete();
+        });
     }).catch(err => {
         console.log("error", err);
     });
-    NOTIFY_CHANNEL.sendMessage('I found ' + theTrelloUpdates.length + ' updates in the database');
-}, 60 * 1000); // Check every minute
+    doUpdateLogic(theTrelloUpdates);
+}, 30 * 1000); // Check every minute
+
+
+function doUpdateLogic(updates) {
+    NOTIFY_CHANNEL.send('I found ' + updates.length + ' update(s) in the database');
+    for (let i = 0; i < updates.length; i++) {
+        let anUpdate = updates[i];
+        switch (anUpdate.action.display.translationKey) {
+            case 'action_move_card_from_list_to_list':
+                NOTIFY_CHANNEL.send('The card titled `' + anUpdate.action.data.card.name + '` was moved from list `' + anUpdate.action.data.listBefore.name + '` to list `' +
+                    anUpdate.action.data.listAfter.name + '` by `' + anUpdate.action.memberCreator.fullName + '`.');
+                break;
+        }
+
+    }
+}
 
 
 client.on("ready", () => {
+    NOTIFY_CHANNEL = client.channels.find(x => x.id === "680592567796105226"); // Channel to send notification
     // This event will run if the bot starts, and logs in, successfully.
     console.log(`Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`);
     // Example of changing the bot's playing game to something useful. `client.user` is what the
@@ -89,13 +102,13 @@ client.on("message", async message => {
 
     // It's good practice to ignore other bots. This also makes your bot ignore itself
     // and not get into a spam loop (we call that "botception").
-    message.channel.send(message.toString());
+    //message.channel.send(message.toString());
     if (message.author.bot) {
         return;
     }
     else {
         //not a bot so can't get stuck in a loop
-    } 
+    }
 
     // Also good practice to ignore any message that does not start with our prefix, 
     // which is set in the prefix file.
