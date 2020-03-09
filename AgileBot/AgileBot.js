@@ -42,7 +42,10 @@ const prefix = require("./prefix.json");
 // prefix.prefix contains the bot's prefix
 
 var NOTIFY_CHANNEL;
+var NOTIFY_SUBSCRIBERS;
 
+var createSubscribers = ["426232523417321473"]; // Russell
+var archiveSubscribers = ["426232523417321473"]; // Russell
 
 var interval = setInterval(async function () {
     let theTrelloUpdates = [];
@@ -69,13 +72,27 @@ function doUpdateLogic(updates) {
                 NOTIFY_CHANNEL.send('The card titled `' + anUpdate.action.data.card.name + '` was moved from list `' + anUpdate.action.data.listBefore.name + '` to list `' +
                     anUpdate.action.data.listAfter.name + '` by `' + anUpdate.action.memberCreator.fullName + '`.');
                 break;
+            case 'action_create_card':
+                createSubscribers.forEach(user => {
+                    NOTIFY_SUBSCRIBERS = client.users.find(x => x.id === user);
+                    NOTIFY_SUBSCRIBERS.send('The new card titled `' + anUpdate.action.data.card.name + '` was created in list `' + anUpdate.action.data.list.name + '` by `' + 
+                        anUpdate.action.memberCreator.fullName + '`.');
+                });
+                break;
+            case 'action_archived_card':
+                archiveSubscribers.forEach(user => {
+                    NOTIFY_SUBSCRIBERS = client.users.find(x => x.id === user);
+                    NOTIFY_SUBSCRIBERS.send('The card titled `' + anUpdate.action.data.card.name + '` was archived from list `' + anUpdate.action.data.list.name + '` by `' +
+                        anUpdate.action.memberCreator.fullName + '`.');
+                });
+                break;
         }
 
     }
 }
 
 
-client.on("ready", () => {
+client.on("ready", () => {                               
     NOTIFY_CHANNEL = client.channels.find(x => x.id === "680592567796105226"); // Channel to send notification
     // This event will run if the bot starts, and logs in, successfully.
     console.log(`Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`);
