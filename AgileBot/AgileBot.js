@@ -17,7 +17,7 @@ const config = {
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://trello-webhhok.firebaseio.com"
+    databaseURL: ""https://agilebotrp.firebaseio.com""
 });
 
 firebase.initializeApp(config);
