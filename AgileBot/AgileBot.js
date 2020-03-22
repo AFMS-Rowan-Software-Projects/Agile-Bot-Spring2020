@@ -2,7 +2,9 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const firebase = require("firebase");
-const serviceAccount = require("../FirebaseFunctions/functions/trello-webhhok-firebase-adminsdk-j1z1c-c2b447b35b.json");
+require("firebase/auth");
+
+const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 const config = {
     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
@@ -109,8 +111,8 @@ function subscribe(name, type, discID){
         while (null !== (chunk = res.read())) {
             if(chunk.toString().includes(name)) {  //finds the ID for the card needed --|
                 var slice = chunk.toString();                                        // | 
-                var i = slice.indexOf(type);                                        //  | 
-                var j = slice.indexOf(',"name":"'+arg);                            //   |  
+                var i = slice.indexOf('"'+type+'":');                               //  | 
+                var j = slice.indexOf(',"name":"'+name);                           //   |  
                 while(!slice.slice(j-6,j).includes('{"id":')) {                   //    | 
                     j--;                                                         //     | 
                     if(slice.slice(j-6,j).includes('{"id":')){                  //      |    
@@ -214,7 +216,7 @@ client.on("message", async message => {
     // Let's go with a few common example commands! Feel free to delete or change those.
 
     if(command === "subcard"){
-        if(subscribe(arg[0], 'cards', message.author.id)){
+        if(!subscribe(args.join(' '), 'cards', message.author.id)){
             message.channel.send('Subscribed Successfully!')
         }
         else{
@@ -223,7 +225,7 @@ client.on("message", async message => {
     }
 
     if(command === "sublist"){
-        if(subscribe(arg[0], 'lists', message.author.id)){
+        if(!subscribe(args.join(' '), 'lists', message.author.id)){
             message.channel.send('Subscribed Successfully!')
         }
         else{
@@ -232,7 +234,7 @@ client.on("message", async message => {
     }
 
     if(command === "subboard"){
-        if(subscribe(arg[0], 'boards', message.author.id)){
+        if(!subscribe(args.join(' '), 'boards', message.author.id)){
             message.channel.send('Subscribed Successfully!')
         }
         else{
