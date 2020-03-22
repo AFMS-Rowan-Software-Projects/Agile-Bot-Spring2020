@@ -5,19 +5,23 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 
 // serviceAccount is our firebase SDK admin token
-const serviceAccount = require("./trello-webhhok-firebase-adminsdk-j1z1c-c2b447b35b.json");
+const serviceAccount = require("./agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 const config = {
-    apiKey: "AIzaSyDg2byr8D7-EGHbG7_xZ9YkYPWOgDp0PhA",
-    authDomain: "trello-webhhok.firebaseapp.com",
-    databaseURL: "https://trello-webhhok.firebaseio.com",
-    projectId: "trello-webhhok",
+    apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
+    authDomain: "agilebotrp.firebaseapp.com",
+    databaseURL: "https://agilebotrp.firebaseio.com",
+    projectId: "agilebotrp",
+    storageBucket: "agilebotrp.appspot.com",
+    messagingSenderId: "153766581343",
+    appId: "1:153766581343:web:202d2b794e6d8ad2c8b7ea",
+    measurementId: "G-MDH3QBK01F"
 }
 
 //authenticating our admin key and logging us into the firestore database
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://trello-webhhok.firebaseio.com"
+  databaseURL: ""https://agilebotrp.firebaseio.com"
 });
 
 firebase.initializeApp(config);
