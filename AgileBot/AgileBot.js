@@ -122,7 +122,21 @@ function subscribe(name, type, discID){
                 let SubCollection = db.collection('Subscribers').doc(subID).get()
                      .then(doc => {
                         if(!doc.exists){
-                            //this shouldn't happen but throw error
+                            db.collection('Subscribers').doc(subID).set({
+                                name: [name]    //adds the name of element as a reference 
+                            });                 //then goes through code to add the discord subscriber down below
+
+                            if(doc.get(discID) == null){    //checks to see if discordID exists
+                                db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
+                                    [discID] : "subscribed"     //"subscribed" is something we can store data in - Just a place holder
+                                })
+                                console.log('Success');
+                            }
+
+                            else{
+                                //Document checking failed somehow
+                                return false;
+                            }
                         }
                         else{
 
@@ -144,8 +158,8 @@ function subscribe(name, type, discID){
             }
 
             else {
-                return false; //send error?
-                return;
+                //card name not found, most common error
+                return false;
             }
         }
     }))
