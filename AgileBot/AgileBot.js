@@ -2,7 +2,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const firebase = require("firebase");
-const serviceAccount = require("../FirebaseFunctions/functions/trello-webhhok-firebase-adminsdk-j1z1c-c2b447b35b.json");
+const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 const config = {
     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
