@@ -2,8 +2,11 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const firebase = require("firebase");
+<<<<<<< HEAD
 require("firebase/auth");
 
+=======
+>>>>>>> 2515e721f12896c80e8e485a3a668f4e6bd07ad6
 const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 const config = {
