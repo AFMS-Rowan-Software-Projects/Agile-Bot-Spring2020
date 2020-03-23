@@ -32,7 +32,7 @@ const fs = require('fs');
 //Subscription stuff
 const fetch = require("node-fetch");
 const trelloURL = 'https://api.trello.com/1/board/5e45a94b60bbf0097f5d9d3c?cards=open&lists=open&checklists=all&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
-
+var subError = ' ';
 
 // Load up the discord.js library
 const Discord = require("discord.js");
@@ -99,7 +99,7 @@ function doUpdateLogic(updates) {
     }
 }
 
-function subscribe(name, type, discID){
+function subscribe(name, type, act, discID, channel){
 
     fetch(trelloURL, {
         method: "GET"
@@ -109,16 +109,16 @@ function subscribe(name, type, discID){
     .then(res => res.on('readable', () => {
         let chunk;
         while (null !== (chunk = res.read())) {
-            if(chunk.toString().includes(name)) {  //finds the ID for the card needed --|
-                var slice = chunk.toString();                                        // | 
-                var i = slice.indexOf('"'+type+'":');                               //  | 
-                var j = slice.indexOf(',"name":"'+name);                           //   |  
-                while(!slice.slice(j-6,j).includes('{"id":')) {                   //    | 
-                    j--;                                                         //     | 
-                    if(slice.slice(j-6,j).includes('{"id":')){                  //      |    
-                        var subID = slice.slice(j+1, j+25)                     //       | 
-                        console.log(name + ' ID is: ' + subID)                //        | 
-                    }                                                        //---------|  
+            if(chunk.toString().includes(',"name":"'+name)) {  //finds the ID for the card needed --|
+                var slice = chunk.toString();                                                    // | 
+                var i = slice.indexOf('"'+type+'":');                                           //  | 
+                var j = slice.indexOf(',"name":"'+name);                                       //   |  
+                while(!slice.slice(j-6,j).includes('{"id":')) {                               //    | 
+                    j--;                                                                     //     | 
+                    if(slice.slice(j-6,j).includes('{"id":')){                              //      |    
+                        var subID = slice.slice(j+1, j+25)                                 //       | 
+                        console.log(name + ' ID is: ' + subID)                            //        | 
+                    }                                                                    //---------|  
                 }
 
                 let SubCollection = db.collection('Subscribers').doc(subID).get()
@@ -130,38 +130,45 @@ function subscribe(name, type, discID){
 
                             if(doc.get(discID) == null){    //checks to see if discordID exists
                                 db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                    [discID] : "subscribed"     //"subscribed" is something we can store data in - Just a place holder
+                                    [discID] : [act]     //"subscribed" is something we can store data in - Just a place holder
                                 })
-                                console.log('Success');
+                                channel.send("Success!")
+                                return;
                             }
 
                             else{
                                 //Document checking failed somehow
-                                return false;
+                                client.channels.get.chid.send("Error, Document Checking Goofed");                                
+                                return;
                             }
                         }
                         else{
 
                             if(doc.get(discID) == null){    //checks to see if discordID exists
                                 db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                    [discID] : "subscribed"    //"subscribed" is something we can store data in - Just a place holder
+                                    [discID] : [act]    //"subscribed" is something we can store data in - Just a place holder
                                 })
-                                return true;
+                                channel.send("Success!");
+                                return;
                             }
 
                             else{
-                                return false; //send error?
+                                let arrunion = db.collection('Subscribers').doc(subID).update({
+                                    [discID]: admin.firestore.FieldValue.arrayUnion(act)
+                                });
+                                channel.send("Successfully added your subscription!");                               
                             }
                         }
                     })
                     .catch(err => {
-                    console.log('Error getting document', err);
+                    console.log("Error getting document", err);
                     });
             }
 
             else {
                 //card name not found, most common error
-                return false;
+                channel.send("Card was not found");
+                return;
             }
         }
     }))
@@ -216,30 +223,18 @@ client.on("message", async message => {
     // Let's go with a few common example commands! Feel free to delete or change those.
 
     if(command === "subcard"){
-        if(!subscribe(args.join(' '), 'cards', message.author.id)){
-            message.channel.send('Subscribed Successfully!')
-        }
-        else{
-            message.channel.send('Subscription failed (throw errors?)')
-        }
+        var arg = args.join(' ').split(' ');
+        subscribe(arg[0], 'cards', arg[1], message.author.id, message.channel);
     }
 
     if(command === "sublist"){
-        if(!subscribe(args.join(' '), 'lists', message.author.id)){
-            message.channel.send('Subscribed Successfully!')
-        }
-        else{
-            message.channel.send('Subscription failed (throw errors?)')
-        }
+        var arg = args.join(' ').split(' ');
+        subscribe(arg[0], 'lists', arg[1], message.author.id, message.channel)
     }
 
     if(command === "subboard"){
-        if(!subscribe(args.join(' '), 'boards', message.author.id)){
-            message.channel.send('Subscribed Successfully!')
-        }
-        else{
-            message.channel.send('Subscription failed (throw errors?)')
-        }
+        var arg = args.join(' ').split(' ');
+        subscribe(arg[0], 'boards', arg[1], message.author.id, message.channel)
     }
 
     if (command === "ping") {
