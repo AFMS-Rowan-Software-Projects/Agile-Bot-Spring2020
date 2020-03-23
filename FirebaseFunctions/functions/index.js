@@ -21,7 +21,7 @@ const config = {
 //authenticating our admin key and logging us into the firestore database
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: ""https://agilebotrp.firebaseio.com"
+  databaseURL: "https://agilebotrp.firebaseio.com"
 });
 
 firebase.initializeApp(config);
