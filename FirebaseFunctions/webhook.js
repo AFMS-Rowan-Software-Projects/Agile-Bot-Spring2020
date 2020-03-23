@@ -6,7 +6,7 @@ const axios = require('axios')
 
 axios.post('https://api.trello.com/1/tokens/7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453/webhooks/?key=f5f7b5f6456619c81fd348f7b69d4e08', {
   description: "testing webhook",
-  callbackURL: "https://us-east1-agilebotrp.cloudfunctions.net/webhookTest",
+  callbackURL: "https://us-central1-agilebotrp.cloudfunctions.net/webhookTest",
   idModel: "5e502aed52e0dd6109a1f605",
 })
 .then((res) => {
