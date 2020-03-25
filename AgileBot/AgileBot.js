@@ -6,6 +6,7 @@ require("firebase/auth");
 
 const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
+
 const config = {
     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
     authDomain:  "agilebotrp.firebaseapp.com",
@@ -32,7 +33,7 @@ const fs = require('fs');
 //Subscription stuff
 const fetch = require("node-fetch");
 const trelloURL = 'https://api.trello.com/1/board/5e45a94b60bbf0097f5d9d3c?cards=open&lists=open&checklists=all&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
-var subError = ' ';
+var actions = new Set(["edit","move","archive","delete","all"]);
 
 // Load up the discord.js library
 const Discord = require("discord.js");
@@ -109,16 +110,19 @@ function subscribe(name, type, act, discID, channel){
     .then(res => res.on('readable', () => {
         let chunk;
         while (null !== (chunk = res.read())) {
-            if(chunk.toString().includes(',"name":"'+name)) {  //finds the ID for the card needed --|
-                var slice = chunk.toString();                                                    // | 
-                var i = slice.indexOf('"'+type+'":');                                           //  | 
-                var j = slice.indexOf(',"name":"'+name);                                       //   |  
-                while(!slice.slice(j-6,j).includes('{"id":')) {                               //    | 
-                    j--;                                                                     //     | 
-                    if(slice.slice(j-6,j).includes('{"id":')){                              //      |    
-                        var subID = slice.slice(j+1, j+25)                                 //       | 
-                        console.log(name + ' ID is: ' + subID)                            //        | 
-                    }                                                                    //---------|  
+            if(chunk.toString().includes(',"name":"'+name+'"')) {  //finds the ID for the card needed ------------|
+                var slice = chunk.toString();                                                                  // | 
+                var i = slice.indexOf('"'+type+'":');                                                         //  | 
+                var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
+                while(i>j){                                                                                 //    |
+                    var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
+                }                                                                                         //      |
+                while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
+                    j--;                                                                                //        | 
+                    if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
+                        var subID = slice.slice(j+1, j+25)                                            //          | 
+                        console.log(name + ' ID is: ' + subID)                                       //           | 
+                    }                                                                               //------------|  
                 }
 
                 let SubCollection = db.collection('Subscribers').doc(subID).get()
@@ -224,16 +228,58 @@ client.on("message", async message => {
 
     if(command === "subcard"){
         var arg = args.join(' ').split(' ');
+        arg[1] = arg[1].toLowerCase();
+        if(arg[2] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[1] == null || arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
+            return;
+        }
+        if(!actions.has(arg[1])){
+            message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
         subscribe(arg[0], 'cards', arg[1], message.author.id, message.channel);
     }
 
     if(command === "sublist"){
         var arg = args.join(' ').split(' ');
+        arg[1] = arg[1].toLowerCase();
+        if(arg[2] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[1] == null || arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
+            return;
+        }
+        if(!actions.has(arg[1])){
+            message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
         subscribe(arg[0], 'lists', arg[1], message.author.id, message.channel)
     }
 
     if(command === "subboard"){
         var arg = args.join(' ').split(' ');
+        arg[1] = arg[1].toLowerCase();
+        if(arg[2] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[1] == null || arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
+            return;
+        }
+        if(!actions.has(arg[1])){
+            message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
         subscribe(arg[0], 'boards', arg[1], message.author.id, message.channel)
     }
 
