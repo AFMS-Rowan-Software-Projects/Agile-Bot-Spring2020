@@ -4,7 +4,8 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 require("firebase/auth");
 
-const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+//const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+var serviceAccount = require("C:/Users/Sal/Documents/Testing/agilebotrp-firebase-adminsdk-gs4o8-7af84966d8.json");
 
 
 const config = {
@@ -98,6 +99,67 @@ function doUpdateLogic(updates) {
         }
 
     }
+}
+
+function unsubscribe(name, type, discID, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => response.body) //reads the trello JSON for data
+    .then(res => res.on('readable', () => {
+        let chunk;
+        while (null !== (chunk = res.read())) {
+            if(chunk.toString().includes(',"name":"'+name+'"')) {  //finds the ID for the card needed ------------|
+                var slice = chunk.toString();                                                                  // | 
+                var i = slice.indexOf('"'+type+'":');                                                         //  | 
+                var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
+                while(i>j){                                                                                 //    |
+                    var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
+                }                                                                                         //      |
+                while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
+                    j--;                                                                                //        | 
+                    if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
+                        var subID = slice.slice(j+1, j+25)                                            //          | 
+                        console.log(name + ' ID is: ' + subID)                                       //           | 
+                    }                                                                               //------------|  
+                }
+
+                let SubCollection = db.collection('Subscribers').doc(subID).get()
+                     .then(doc => {
+                        if(!doc.exists){
+                            channel.send('You are not subbed to this item!')
+                            return;
+                        }
+                        else{
+
+                            if(doc.get(discID) == null){    //checks to see if discordID exists
+                                channel.send("You are not subbed to this item!");
+                                return;
+                            }
+
+                            else{
+                                let arrunion = db.collection('Subscribers').doc(subID).update({
+                                    [discID]: admin.firestore.FieldValue.delete()
+                                });
+                                channel.send("Successfully removed your subscription!"); 
+                                return;                              
+                            }
+                        }
+                    })
+                    .catch(err => {
+                    console.log("Error getting document", err);
+                    });
+            }
+
+            else {
+                //card name not found, most common error
+                channel.send("Card was not found");
+                return;
+            }
+        }
+    }))
 }
 
 function subscribe(name, type, act, discID, channel){
@@ -228,7 +290,6 @@ client.on("message", async message => {
 
     if(command === "subcard"){
         var arg = args.join(' ').split(' ');
-        arg[1] = arg[1].toLowerCase();
         if(arg[2] != null){
             message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
             return;
@@ -237,6 +298,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
             return;
         }
+        arg[1] = arg[1].toLowerCase();
         if(!actions.has(arg[1])){
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
@@ -247,7 +309,6 @@ client.on("message", async message => {
 
     if(command === "sublist"){
         var arg = args.join(' ').split(' ');
-        arg[1] = arg[1].toLowerCase();
         if(arg[2] != null){
             message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
             return;
@@ -256,6 +317,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
             return;
         }
+        arg[1] = arg[1].toLowerCase();
         if(!actions.has(arg[1])){
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
@@ -266,7 +328,6 @@ client.on("message", async message => {
 
     if(command === "subboard"){
         var arg = args.join(' ').split(' ');
-        arg[1] = arg[1].toLowerCase();
         if(arg[2] != null){
             message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
             return;
@@ -275,12 +336,55 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name and subscription type.')
             return;
         }
+        arg[1] = arg[1].toLowerCase();
         if(!actions.has(arg[1])){
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
         arg[0] = arg[0].replace('_', ' ');
         subscribe(arg[0], 'boards', arg[1], message.author.id, message.channel)
+    }
+
+    if(command === "unsubcard"){
+        var arg = args.join(' ').split(' ');
+        if(arg[1] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        unsubscribe(arg[0], 'cards', message.author.id, message.channel);
+    }
+
+    if(command === "unsublist"){
+        var arg = args.join(' ').split(' ');
+        if(arg[1] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        unsubscribe(arg[0], 'lists', message.author.id, message.channel);
+    }
+
+    if(command === "unsubboard"){
+        var arg = args.join(' ').split(' ');
+        if(arg[1] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        unsubscribe(arg[0], 'boards', message.author.id, message.channel);
     }
 
     if (command === "ping") {
