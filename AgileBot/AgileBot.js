@@ -33,7 +33,7 @@ const fs = require('fs');
 //Subscription stuff
 const fetch = require("node-fetch");
 const trelloURL = 'https://api.trello.com/1/board/5e45a94b60bbf0097f5d9d3c?cards=open&lists=open&checklists=all&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
-var actions = new Set(["edit","move","archive","delete","all"]);
+var actions = new Set(["edit","move","createcard","archive","all"]);
 
 // Load up the discord.js library
 const Discord = require("discord.js");
@@ -51,10 +51,6 @@ const prefix = require("./prefix.json");
 // prefix.prefix contains the bot's prefix
 
 var NOTIFY_CHANNEL;
-var NOTIFY_SUBSCRIBERS;
-
-var createSubscribers = ["426232523417321473"]; // Russell
-var archiveSubscribers = ["426232523417321473"]; // Russell
 
 var interval = setInterval(async function () {
     let theTrelloUpdates = [];
@@ -62,13 +58,23 @@ var interval = setInterval(async function () {
     let theJSONGrab = await theJSONsRef.get().then(snapshot => {
         snapshot.docs.forEach((doc) => {
             theTrelloUpdates.push(doc.data());
-            let theAdd = db.collection('archivedUpdates').add(doc.data());
-            let theDelete = db.collection('trelloUpdateTest').doc(doc.id).delete();
+            // let theAdd = db.collection('archivedUpdates').add(doc.data());
+            // let theDelete = db.collection('trelloUpdateTest').doc(doc.id).delete();
         });
     }).catch(err => {
         console.log("error", err);
     });
-    doUpdateLogic(theTrelloUpdates);
+    let trelloSubscribers = [];
+    let JSONsRef = db.collection('Subscribers');
+    let JSONGrab = await JSONsRef.get().then(snapshot => {
+        snapshot.docs.forEach((doc) => {
+            trelloSubscribers.push(doc.data());
+        });
+    }).catch(err => {
+        console.log("error", err);
+    })
+    notifySubscribers(theTrelloUpdates, trelloSubscribers);
+    // doUpdateLogic(theTrelloUpdates);
 }, 30 * 1000); // Check every minute
 
 
@@ -80,20 +86,6 @@ function doUpdateLogic(updates) {
             case 'action_move_card_from_list_to_list':
                 NOTIFY_CHANNEL.send('The card titled `' + anUpdate.action.data.card.name + '` was moved from list `' + anUpdate.action.data.listBefore.name + '` to list `' +
                     anUpdate.action.data.listAfter.name + '` by `' + anUpdate.action.memberCreator.fullName + '`.');
-                break;
-            case 'action_create_card':
-                createSubscribers.forEach(user => {
-                    NOTIFY_SUBSCRIBERS = client.users.find(x => x.id === user);
-                    NOTIFY_SUBSCRIBERS.send('The new card titled `' + anUpdate.action.data.card.name + '` was created in list `' + anUpdate.action.data.list.name + '` by `' + 
-                        anUpdate.action.memberCreator.fullName + '`.');
-                });
-                break;
-            case 'action_archived_card':
-                archiveSubscribers.forEach(user => {
-                    NOTIFY_SUBSCRIBERS = client.users.find(x => x.id === user);
-                    NOTIFY_SUBSCRIBERS.send('The card titled `' + anUpdate.action.data.card.name + '` was archived from list `' + anUpdate.action.data.list.name + '` by `' +
-                        anUpdate.action.memberCreator.fullName + '`.');
-                });
                 break;
         }
 
@@ -237,6 +229,61 @@ function subscribe(name, type, act, discID, channel){
             }
         }
     }))
+}
+
+function notifySubscribers(updates, subscribers) {
+    let subs = new Map;
+    for (let [k, v] of Object.entries(subscribers)) { // Populate map with keys of cards/lists which currently have subscribers.
+        for (let [k2, v2] of Object.entries(v)) {     // Key is the name of the trello object.
+            if (k2 == 'name') {
+                subs.set(v2.toString(), '');
+            }
+        }
+    }
+
+    for (let [k, v] of Object.entries(subscribers)) {   // Assign each key in map to another map, which has keys of subscribers
+        let name = '';                                  // Discord IDs paired with a list of the actions they are watching.
+        let currentSubs = new Map;                      // subs map structure is:
+        for (let [k2, v2] of Object.entries(v)) {       // key:                       value:
+            if (k2 == 'name') {                         // card/list name(String) <-> currentSubs(Map)
+                name = v2.toString();                   //                            |
+            }                                           //                            |--> key:                        value:
+            else if (!(isNaN(k2)) && k2.length == 18) { //                                 user Discord ID(String) <-> subscribed actions(object)
+                currentSubs.set(k2, v2);
+            }
+        }
+        subs.set(name, currentSubs);
+    }
+    
+    for (let i = 0; i < updates.length; i++) {
+        let cardName = '';
+        let listName = '';
+        if ('card' in updates[i].action.data) { // If action was done on a card, 'cardName' and 'cardList' will be updated        
+            cardName = updates[i].action.data.card.name;
+        }
+        if ('list' in updates[i].action.data) { // If action was done on a list, only 'listName' will be updated
+            listName = updates[i].action.data.list.name;
+        }
+        let action = updates[i].action.type;
+        let translKey = ''; // For specific updates in future
+
+        // Logic for cards and lists should be separate. For instance, you can't subscribe to a 'create' action on a card, since it
+        // isn't created yet.
+        // TODO: Figure out all the action that should be allowed to be subscribed to for card, list, board.
+        if (subs.has(cardName)) {
+            //TODO: Card subscription stuff
+        }
+        else if (subs.has(listName)) {
+            for (let [sub, actions] of subs.get(listName)) {
+                if (Object.values(actions).indexOf(action.toLowerCase()) > -1) { // Card is created in list
+                    let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
+                    NOTIFY_SUBSCRIBER.send('The new card titled `' + cardName + '` was created in list `' + listName + '` by `' + 
+                        updates[i].action.memberCreator.fullName + '`.');
+                    console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                }
+            }
+        }
+    }
 }
 
 client.on("ready", () => {                               
