@@ -56,10 +56,9 @@ var interval = setInterval(async function () {
     let theTrelloUpdates = [];
     let theJSONsRef = db.collection('trelloUpdateTest');
     let theJSONGrab = await theJSONsRef.get().then(snapshot => {
-        snapshot.docs.forEach((doc) => {
+        snapshot.docs.forEach((doc) => {           
             theTrelloUpdates.push(doc.data());
-            // let theAdd = db.collection('archivedUpdates').add(doc.data());
-            // let theDelete = db.collection('trelloUpdateTest').doc(doc.id).delete();
+            theTrelloUpdates[theTrelloUpdates.length - 1].docID = doc.id; // Add doc ID to update so it can be removed/archived later
         });
     }).catch(err => {
         console.log("error", err);
@@ -75,7 +74,7 @@ var interval = setInterval(async function () {
     })
     notifySubscribers(theTrelloUpdates, trelloSubscribers);
     // doUpdateLogic(theTrelloUpdates);
-}, 30 * 1000); // Check every minute
+}, 5 * 1000); // Check every minute
 
 
 function doUpdateLogic(updates) {
@@ -273,13 +272,15 @@ function notifySubscribers(updates, subscribers) {
         if (subs.has(cardName)) {
             //TODO: Card subscription stuff
         }
-        else if (subs.has(listName)) {
+        else if (subs.has(listName)) { // Someone is subscribed to this update, which is a change on a list
             for (let [sub, actions] of subs.get(listName)) {
                 if (Object.values(actions).indexOf(action.toLowerCase()) > -1) { // Card is created in list
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
                     NOTIFY_SUBSCRIBER.send('The new card titled `' + cardName + '` was created in list `' + listName + '` by `' + 
                         updates[i].action.memberCreator.fullName + '`.');
                     console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                    let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
+                    let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
                 }
             }
         }
