@@ -74,7 +74,7 @@ var interval = setInterval(async function () {
     })
     notifySubscribers(theTrelloUpdates, trelloSubscribers);
     // doUpdateLogic(theTrelloUpdates);
-}, 5 * 1000); // Check every minute
+}, 30 * 1000); // Check every minute
 
 
 function doUpdateLogic(updates) {
