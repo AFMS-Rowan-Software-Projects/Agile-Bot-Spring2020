@@ -208,7 +208,17 @@ function subscribe(name, type, act, discID, channel){
                                 return;
                             }
 
-                            else{
+                            else{                                
+                                if(act == 'all'){
+                                    let arrunion = db.collection('Subscribers').doc(subID).update({
+                                        [discID]: admin.firestore.FieldValue.delete()
+                                    });
+                                    db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
+                                        [discID] : [act]     //"subscribed" is something we can store data in - Just a place holder
+                                    })
+                                    channel.send("Success!")
+                                    return;
+                                }
                                 let arrunion = db.collection('Subscribers').doc(subID).update({
                                     [discID]: admin.firestore.FieldValue.arrayUnion(act)
                                 });
