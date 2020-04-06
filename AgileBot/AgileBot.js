@@ -240,6 +240,86 @@ function subscribe(name, type, act, discID, channel){
     }))
 }
 
+function addComment(name, type, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => response.body) //reads the trello JSON for data
+    .then(res => res.on('readable', () => {
+        let chunk;
+        while (null !== (chunk = res.read())) {
+            if(chunk.toString().includes(',"name":"'+name+'"')) {  //finds the ID for the card needed ------------|
+                var slice = chunk.toString();                                                                  // | 
+                var i = slice.indexOf('"'+type+'":');                                                         //  | 
+                var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
+                while(i>j){                                                                                 //    |
+                    var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
+                }                                                                                         //      |
+                while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
+                    j--;                                                                                //        | 
+                    if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
+                        var subID = slice.slice(j+1, j+25)                                            //          | 
+                        console.log(name + ' ID is: ' + subID)                                       //           | 
+                    }                                                                               //------------|  
+                }
+
+                //logic to add comment here
+
+            }
+
+            else {
+                //card name not found, most common error
+                channel.send("Card was not found");
+                return;
+            }
+        }
+    }))
+}
+
+function addComment2(name, msg, discUserId, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => {
+        return response.json()
+    })
+    .then(data => {
+        var boardObj = data;
+        var ourCard;
+        let cards = boardObj.cards;
+        for(let i = 0 ; i < cards.length ; i++) {
+            if(cards[i].name.toLowerCase() == name.toLowerCase()) {
+                //card exists
+                ourCard = cards[i];
+            }
+        }
+        if(ourCard) {
+            addCommentToCard(ourCard.id, msg);
+        }
+    })
+    .catch(err => {
+        
+    });
+}
+
+function addCommentToCard(cardId, text) {
+    fetch('https://api.trello.com/1/cards/'+cardId+'/actions/comments?text='+text+'&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+  method: 'POST'
+})
+  .then(response => {
+    console.log(
+      `Response: ${response.status} ${response.statusText}`
+    );
+    return response.text();
+  })
+  .then(text => console.log(text))
+  .catch(err => console.error(err));
+}
+
 function notifySubscribers(updates, subscribers) {
     let subs = new Map;
     for (let [k, v] of Object.entries(subscribers)) { // Populate map with keys of cards/lists which currently have subscribers.
@@ -442,6 +522,22 @@ client.on("message", async message => {
         }
         arg[0] = arg[0].replace('_', ' ');
         unsubscribe(arg[0], 'boards', message.author.id, message.channel);
+    }
+
+    if(command == "comment") {
+        var arg = args.join(' ').split(' ');
+        if(arg[1] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name and your message.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        let i = 1;
+        let msg = "";
+        while(arg[i]) {
+            msg += arg[i] + " ";
+            i++
+        }
+        addComment2(arg[0], msg, message.author.id, message.channel);
     }
 
     if (command === "ping") {
