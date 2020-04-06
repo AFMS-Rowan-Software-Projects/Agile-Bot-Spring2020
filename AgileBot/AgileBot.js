@@ -4,30 +4,30 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 require("firebase/auth");
 
-// const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 
-// const config = {
-//     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
-//     authDomain:  "agilebotrp.firebaseapp.com",
-//     databaseURL: "https://agilebotrp.firebaseio.com",
-//     projectId: "agilebotrp",
-//     storageBucket: "agilebotrp.appspot.com",
-//     messagingSenderId: "153766581343",
-//     appId: "1:153766581343:web:202d2b794e6d8ad2c8b7ea",
-//     measurementId: "G-MDH3QBK01F"
-// }
+const config = {
+    apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
+    authDomain:  "agilebotrp.firebaseapp.com",
+    databaseURL: "https://agilebotrp.firebaseio.com",
+    projectId: "agilebotrp",
+    storageBucket: "agilebotrp.appspot.com",
+    messagingSenderId: "153766581343",
+    appId: "1:153766581343:web:202d2b794e6d8ad2c8b7ea",
+    measurementId: "G-MDH3QBK01F"
+}
 
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-//     databaseURL: "https://agilebotrp.firebaseio.com"
-// });
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://agilebotrp.firebaseio.com"
+});
 
-// firebase.initializeApp(config);
+firebase.initializeApp(config);
 
-// const db = admin.firestore();
-// const fbAuth = firebase.auth();
-// const fs = require('fs');
+const db = admin.firestore();
+const fbAuth = firebase.auth();
+const fs = require('fs');
 
 
 //Subscription stuff
@@ -52,29 +52,29 @@ const prefix = require("./prefix.json");
 
 var NOTIFY_CHANNEL;
 
-// var interval = setInterval(async function () {
-//     let theTrelloUpdates = [];
-//     let theJSONsRef = db.collection('trelloUpdateTest');
-//     let theJSONGrab = await theJSONsRef.get().then(snapshot => {
-//         snapshot.docs.forEach((doc) => {           
-//             theTrelloUpdates.push(doc.data());
-//             theTrelloUpdates[theTrelloUpdates.length - 1].docID = doc.id; // Add doc ID to update so it can be removed/archived later
-//         });
-//     }).catch(err => {
-//         console.log("error", err);
-//     });
-//     let trelloSubscribers = [];
-//     let JSONsRef = db.collection('Subscribers');
-//     let JSONGrab = await JSONsRef.get().then(snapshot => {
-//         snapshot.docs.forEach((doc) => {
-//             trelloSubscribers.push(doc.data());
-//         });
-//     }).catch(err => {
-//         console.log("error", err);
-//     })
-//     notifySubscribers(theTrelloUpdates, trelloSubscribers);
-//     // doUpdateLogic(theTrelloUpdates);
-// }, 30 * 1000); // Check every minute
+var interval = setInterval(async function () {
+    let theTrelloUpdates = [];
+    let theJSONsRef = db.collection('trelloUpdateTest');
+    let theJSONGrab = await theJSONsRef.get().then(snapshot => {
+        snapshot.docs.forEach((doc) => {           
+            theTrelloUpdates.push(doc.data());
+            theTrelloUpdates[theTrelloUpdates.length - 1].docID = doc.id; // Add doc ID to update so it can be removed/archived later
+        });
+    }).catch(err => {
+        console.log("error", err);
+    });
+    let trelloSubscribers = [];
+    let JSONsRef = db.collection('Subscribers');
+    let JSONGrab = await JSONsRef.get().then(snapshot => {
+        snapshot.docs.forEach((doc) => {
+            trelloSubscribers.push(doc.data());
+        });
+    }).catch(err => {
+        console.log("error", err);
+    })
+    notifySubscribers(theTrelloUpdates, trelloSubscribers);
+    // doUpdateLogic(theTrelloUpdates);
+}, 30 * 1000); // Check every minute
 
 
 function doUpdateLogic(updates) {
@@ -275,7 +275,10 @@ function addComment2(name, msg, discUserId, channel){
     })
 
     .then(response => {
-        var boardObj = JSON.parse(response.body);
+        return response.json()
+    })
+    .then(data => {
+        var boardObj = data;
         var ourCard;
         let cards = boardObj.cards;
         for(let i = 0 ; i < cards.length ; i++) {
@@ -287,11 +290,14 @@ function addComment2(name, msg, discUserId, channel){
         if(ourCard) {
             addCommentToCard(ourCard.id, msg);
         }
+    })
+    .catch(err => {
+        
     });
 }
 
 function addCommentToCard(cardId, text) {
-    fetch('https://api.trello.com/1/cards/'+cardId+'/actions/comments?text='+text, {
+    fetch('https://api.trello.com/1/cards/'+cardId+'/actions/comments?text='+text+'&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
   method: 'POST'
 })
   .then(response => {
@@ -518,7 +524,8 @@ client.on("message", async message => {
         let i = 1;
         let msg = "";
         while(arg[i]) {
-            msg = msg+arg[i];
+            msg += arg[i] + " ";
+            i++
         }
         addComment2(arg[0], msg, message.author.id, message.channel);
     }
