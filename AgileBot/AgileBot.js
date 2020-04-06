@@ -4,30 +4,30 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 require("firebase/auth");
 
-const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+// const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 
-const config = {
-    apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
-    authDomain:  "agilebotrp.firebaseapp.com",
-    databaseURL: "https://agilebotrp.firebaseio.com",
-    projectId: "agilebotrp",
-    storageBucket: "agilebotrp.appspot.com",
-    messagingSenderId: "153766581343",
-    appId: "1:153766581343:web:202d2b794e6d8ad2c8b7ea",
-    measurementId: "G-MDH3QBK01F"
-}
+// const config = {
+//     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
+//     authDomain:  "agilebotrp.firebaseapp.com",
+//     databaseURL: "https://agilebotrp.firebaseio.com",
+//     projectId: "agilebotrp",
+//     storageBucket: "agilebotrp.appspot.com",
+//     messagingSenderId: "153766581343",
+//     appId: "1:153766581343:web:202d2b794e6d8ad2c8b7ea",
+//     measurementId: "G-MDH3QBK01F"
+// }
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://agilebotrp.firebaseio.com"
-});
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//     databaseURL: "https://agilebotrp.firebaseio.com"
+// });
 
-firebase.initializeApp(config);
+// firebase.initializeApp(config);
 
-const db = admin.firestore();
-const fbAuth = firebase.auth();
-const fs = require('fs');
+// const db = admin.firestore();
+// const fbAuth = firebase.auth();
+// const fs = require('fs');
 
 
 //Subscription stuff
@@ -52,29 +52,29 @@ const prefix = require("./prefix.json");
 
 var NOTIFY_CHANNEL;
 
-var interval = setInterval(async function () {
-    let theTrelloUpdates = [];
-    let theJSONsRef = db.collection('trelloUpdateTest');
-    let theJSONGrab = await theJSONsRef.get().then(snapshot => {
-        snapshot.docs.forEach((doc) => {           
-            theTrelloUpdates.push(doc.data());
-            theTrelloUpdates[theTrelloUpdates.length - 1].docID = doc.id; // Add doc ID to update so it can be removed/archived later
-        });
-    }).catch(err => {
-        console.log("error", err);
-    });
-    let trelloSubscribers = [];
-    let JSONsRef = db.collection('Subscribers');
-    let JSONGrab = await JSONsRef.get().then(snapshot => {
-        snapshot.docs.forEach((doc) => {
-            trelloSubscribers.push(doc.data());
-        });
-    }).catch(err => {
-        console.log("error", err);
-    })
-    notifySubscribers(theTrelloUpdates, trelloSubscribers);
-    // doUpdateLogic(theTrelloUpdates);
-}, 30 * 1000); // Check every minute
+// var interval = setInterval(async function () {
+//     let theTrelloUpdates = [];
+//     let theJSONsRef = db.collection('trelloUpdateTest');
+//     let theJSONGrab = await theJSONsRef.get().then(snapshot => {
+//         snapshot.docs.forEach((doc) => {           
+//             theTrelloUpdates.push(doc.data());
+//             theTrelloUpdates[theTrelloUpdates.length - 1].docID = doc.id; // Add doc ID to update so it can be removed/archived later
+//         });
+//     }).catch(err => {
+//         console.log("error", err);
+//     });
+//     let trelloSubscribers = [];
+//     let JSONsRef = db.collection('Subscribers');
+//     let JSONGrab = await JSONsRef.get().then(snapshot => {
+//         snapshot.docs.forEach((doc) => {
+//             trelloSubscribers.push(doc.data());
+//         });
+//     }).catch(err => {
+//         console.log("error", err);
+//     })
+//     notifySubscribers(theTrelloUpdates, trelloSubscribers);
+//     // doUpdateLogic(theTrelloUpdates);
+// }, 30 * 1000); // Check every minute
 
 
 function doUpdateLogic(updates) {
@@ -268,44 +268,40 @@ function addComment(name, type, channel){
     }))
 }
 
-function addComment2(name, discUserId, channel){
+function addComment2(name, msg, discUserId, channel){
 
     fetch(trelloURL, {
         method: "GET"
     })
 
-    .then(response => response.body) //reads the trello JSON for data
-    .then(res => res.on('readable', () => {
-        let chunk;
-        while (null !== (chunk = res.read())) {
-            var card = JSON.parse(chunk);
-            console.log(card);
-            // if(card.name == name) {  //finds the ID for the card needed ------------|
-            //     var slice = chunk.toString();                                                                  // | 
-            //     var i = slice.indexOf('"'+type+'":');                                                         //  | 
-            //     var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
-            //     while(i>j){                                                                                 //    |
-            //         var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
-            //     }                                                                                         //      |
-            //     while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
-            //         j--;                                                                                //        | 
-            //         if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
-            //             var subID = slice.slice(j+1, j+25)                                            //          | 
-            //             console.log(name + ' ID is: ' + subID)                                       //           | 
-            //         }                                                                               //------------|  
-            //     }
-
-            //     //logic to add comment here
-
-            // }
-
-            // else {
-            //     //card name not found, most common error
-            //     channel.send("Card was not found");
-            //     return;
-            // }
+    .then(response => {
+        var boardObj = JSON.parse(response.body);
+        var ourCard;
+        let cards = boardObj.cards;
+        for(let i = 0 ; i < cards.length ; i++) {
+            if(cards[i].name.toLowerCase() == name.toLowerCase()) {
+                //card exists
+                ourCard = cards[i];
+            }
         }
-    }))
+        if(ourCard) {
+            addCommentToCard(ourCard.id, msg);
+        }
+    });
+}
+
+function addCommentToCard(cardId, text) {
+    fetch('https://api.trello.com/1/cards/'+cardId+'/actions/comments?text='+text, {
+  method: 'POST'
+})
+  .then(response => {
+    console.log(
+      `Response: ${response.status} ${response.statusText}`
+    );
+    return response.text();
+  })
+  .then(text => console.log(text))
+  .catch(err => console.error(err));
 }
 
 function notifySubscribers(updates, subscribers) {
@@ -514,16 +510,17 @@ client.on("message", async message => {
 
     if(command == "comment") {
         var arg = args.join(' ').split(' ');
-        if(arg[1] != null){
-            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
-            return;
-        }
-        if(arg[0] == null){
-            message.channel.send('Not enough arguments. Make sure you have the card name.')
+        if(arg[1] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name and your message.')
             return;
         }
         arg[0] = arg[0].replace('_', ' ');
-        addComment2(arg[0], message.author.id, message.channel);
+        let i = 1;
+        let msg = "";
+        while(arg[i]) {
+            msg = msg+arg[i];
+        }
+        addComment2(arg[0], msg, message.author.id, message.channel);
     }
 
     if (command === "ping") {
