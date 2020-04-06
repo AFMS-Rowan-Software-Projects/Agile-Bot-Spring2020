@@ -230,6 +230,84 @@ function subscribe(name, type, act, discID, channel){
     }))
 }
 
+function addComment(name, type, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => response.body) //reads the trello JSON for data
+    .then(res => res.on('readable', () => {
+        let chunk;
+        while (null !== (chunk = res.read())) {
+            if(chunk.toString().includes(',"name":"'+name+'"')) {  //finds the ID for the card needed ------------|
+                var slice = chunk.toString();                                                                  // | 
+                var i = slice.indexOf('"'+type+'":');                                                         //  | 
+                var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
+                while(i>j){                                                                                 //    |
+                    var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
+                }                                                                                         //      |
+                while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
+                    j--;                                                                                //        | 
+                    if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
+                        var subID = slice.slice(j+1, j+25)                                            //          | 
+                        console.log(name + ' ID is: ' + subID)                                       //           | 
+                    }                                                                               //------------|  
+                }
+
+                //logic to add comment here
+
+            }
+
+            else {
+                //card name not found, most common error
+                channel.send("Card was not found");
+                return;
+            }
+        }
+    }))
+}
+
+function addComment2(name, discUserId, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => response.body) //reads the trello JSON for data
+    .then(res => res.on('readable', () => {
+        let chunk;
+        while (null !== (chunk = res.read())) {
+            var card = JSON.parse(chunk);
+            console.log(card);
+            // if(card.name == name) {  //finds the ID for the card needed ------------|
+            //     var slice = chunk.toString();                                                                  // | 
+            //     var i = slice.indexOf('"'+type+'":');                                                         //  | 
+            //     var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
+            //     while(i>j){                                                                                 //    |
+            //         var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
+            //     }                                                                                         //      |
+            //     while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
+            //         j--;                                                                                //        | 
+            //         if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
+            //             var subID = slice.slice(j+1, j+25)                                            //          | 
+            //             console.log(name + ' ID is: ' + subID)                                       //           | 
+            //         }                                                                               //------------|  
+            //     }
+
+            //     //logic to add comment here
+
+            // }
+
+            // else {
+            //     //card name not found, most common error
+            //     channel.send("Card was not found");
+            //     return;
+            // }
+        }
+    }))
+}
+
 function notifySubscribers(updates, subscribers) {
     let subs = new Map;
     for (let [k, v] of Object.entries(subscribers)) { // Populate map with keys of cards/lists which currently have subscribers.
@@ -432,6 +510,20 @@ client.on("message", async message => {
         }
         arg[0] = arg[0].replace('_', ' ');
         unsubscribe(arg[0], 'boards', message.author.id, message.channel);
+    }
+
+    if(command == "comment") {
+        var arg = args.join(' ').split(' ');
+        if(arg[1] != null){
+            message.channel.send("Too many arguments. Please remember to use ' _ ' to replace spaces on Trello items.");
+            return;
+        }
+        if(arg[0] == null){
+            message.channel.send('Not enough arguments. Make sure you have the card name.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        addComment2(arg[0], message.author.id, message.channel);
     }
 
     if (command === "ping") {

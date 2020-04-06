@@ -16,7 +16,6 @@ axios.post('https://api.trello.com/1/tokens/7038d4016f578c077da4b282d74a8aad0aa8
 .catch((error) => {
   console.error(error)
 });
-<<<<<<< HEAD
 
 axios.post('https://api.trello.com/1/tokens/7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453/webhooks/?key=f5f7b5f6456619c81fd348f7b69d4e08', {
   description: "Send changes to Firebase",
@@ -30,5 +29,3 @@ axios.post('https://api.trello.com/1/tokens/7038d4016f578c077da4b282d74a8aad0aa8
 .catch((error) => {
   console.error(error)
 });
-=======
->>>>>>> fd686cf85b1d96eaf756ddfa7153698800cdd07d
