@@ -240,43 +240,6 @@ function subscribe(name, type, act, discID, channel){
     }))
 }
 
-function addComment(name, type, channel){
-
-    fetch(trelloURL, {
-        method: "GET"
-    })
-
-    .then(response => response.body) //reads the trello JSON for data
-    .then(res => res.on('readable', () => {
-        let chunk;
-        while (null !== (chunk = res.read())) {
-            if(chunk.toString().includes(',"name":"'+name+'"')) {  //finds the ID for the card needed ------------|
-                var slice = chunk.toString();                                                                  // | 
-                var i = slice.indexOf('"'+type+'":');                                                         //  | 
-                var j = slice.indexOf(',"name":"'+name+'"');                                                 //   |  
-                while(i>j){                                                                                 //    |
-                    var j = slice.indexOf(',"name":"'+name+'"', slice.indexOf(',"name":"'+name+'"') + 1);  //     |
-                }                                                                                         //      |
-                while(!slice.slice(j-6,j).includes('{"id":')) {                                          //       | 
-                    j--;                                                                                //        | 
-                    if(slice.slice(j-6,j).includes('{"id":')){                                         //         |    
-                        var subID = slice.slice(j+1, j+25)                                            //          | 
-                        console.log(name + ' ID is: ' + subID)                                       //           | 
-                    }                                                                               //------------|  
-                }
-
-                //logic to add comment here
-
-            }
-
-            else {
-                //card name not found, most common error
-                channel.send("Card was not found");
-                return;
-            }
-        }
-    }))
-}
 
 function addComment2(name, msg, discUserId, channel){
 
