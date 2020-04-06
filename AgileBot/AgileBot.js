@@ -261,7 +261,7 @@ function addComment2(name, msg, discUserId, channel){
             }
         }
         if(ourCard) {
-            addCommentToCard(ourCard.id, msg);
+            addCommentToCard(ourCard.id, msg, channel);
         }
     })
     .catch(err => {
@@ -269,7 +269,7 @@ function addComment2(name, msg, discUserId, channel){
     });
 }
 
-function addCommentToCard(cardId, text) {
+function addCommentToCard(cardId, text, channel) {
     fetch('https://api.trello.com/1/cards/'+cardId+'/actions/comments?text='+text+'&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
   method: 'POST'
 })
@@ -277,6 +277,60 @@ function addCommentToCard(cardId, text) {
     console.log(
       `Response: ${response.status} ${response.statusText}`
     );
+    if(response.status == "200") {
+        channel.send("Successfully added comment to card");
+    }
+    return response.text();
+  })
+  .then(text => console.log(text))
+  .catch(err => console.error(err));
+}
+
+function addCardToList(listName, cardName, discUserId, channel){
+
+    fetch(trelloURL, {
+        method: "GET"
+    })
+
+    .then(response => {
+        return response.json()
+    })
+    .then(data => {
+        console.log("?");
+        var boardObj = data;
+        var ourList;
+        let lists = boardObj.lists;
+        for(let i = 0 ; i < lists.length ; i++) {
+            if(lists[i].name.toLowerCase() == listName.toLowerCase()) {
+                //card exists
+                
+                ourList = lists[i];
+                console.log(ourList);
+            }
+        }
+        if(ourList) {
+            addCard(ourList.id, cardName, channel);
+        }
+        return;
+    })
+    .catch(err => {
+        channel.send("something broke");
+        return;
+    });
+}
+
+function addCard(listId, cardName, channel) {
+    fetch('https://api.trello.com/1/cards?idList='+listId+'&name='+cardName+'&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+  method: 'POST'
+})
+  .then(response => {
+    console.log(
+      `Response: ${response.status} ${response.statusText}`
+    );
+    //channel.send(response.status);
+    if(response.status == "200") {
+        channel.send("Successfully added card")
+    }
     return response.text();
   })
   .then(text => console.log(text))
@@ -501,6 +555,23 @@ client.on("message", async message => {
             i++
         }
         addComment2(arg[0], msg, message.author.id, message.channel);
+    }
+
+    if(command == "addcard") {
+        //message.channel.send("ye");
+        var arg = args.join(' ').split(' ');
+        if(arg[1] == null){
+            message.channel.send('Not enough arguments. Make sure you have the list name and your card name.')
+            return;
+        }
+        arg[0] = arg[0].replace('_', ' ');
+        let i = 1;
+        let cardName = "";
+        while(arg[i]) {
+            cardName += arg[i] + " ";
+            i++
+        } //arg[0] is the list name
+        addCardToList(arg[0], cardName, message.author.id, message.channel);
     }
 
     if (command === "ping") {
