@@ -4,7 +4,8 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 require("firebase/auth");
 
-const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+//const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+var serviceAccount = require("C:/Users/Sal/Documents/Testing/agilebotrp-firebase-adminsdk-gs4o8-7af84966d8.json");
 
 
 const config = {
@@ -503,13 +504,13 @@ function notifySubscribers(updates, subscribers) {
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
         else if (subs.has(boardName)){
-            for (let [sub, actions] of subs.get(listName)) {
+            for (let [sub, actions] of subs.get(boardName)) {
                 if (Object.values(actions).indexOf('create') > -1 || Object.values(actions).indexOf('all') > -1) { // List is created in the board
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
                     switch (translKey) {
                         case 'action_added_list_to_board':
                             NOTIFY_SUBSCRIBER.send('The List `' + updates[i].action.data.list.name + '` was created in the board `' + boardName + '` by `' +
-                                updates[i].action.display.memberCreator.fullName + '`.');
+                                updates[i].action.memberCreator.fullName + '`.');
                             console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
                             break;
                     }
