@@ -99,64 +99,68 @@ function doUpdateLogic(updates) {
 }
 
 function unsubscribe(name, type, discID, channel) {
-
     fetch(trelloURL, {
         method: "GET"
     })
 
-        .then(response => response.body) //reads the trello JSON for data
-        .then(res => res.on('readable', () => {
-            let chunk;
-            while (null !== (chunk = res.read())) {
-                if (chunk.toString().includes(',"name":"' + name + '"')) {  //finds the ID for the card needed ------------|
-                    var slice = chunk.toString();                                                                  // | 
-                    var i = slice.indexOf('"' + type + '":');                                                         //  | 
-                    var j = slice.indexOf(',"name":"' + name + '"');                                                 //   |  
-                    while (i > j) {                                                                                 //    |
-                        var j = slice.indexOf(',"name":"' + name + '"', slice.indexOf(',"name":"' + name + '"') + 1);  //     |
-                    }                                                                                         //      |
-                    while (!slice.slice(j - 6, j).includes('{"id":')) {                                          //       | 
-                        j--;                                                                                //        | 
-                        if (slice.slice(j - 6, j).includes('{"id":')) {                                         //         |    
-                            var subID = slice.slice(j + 1, j + 25)                                            //          | 
-                            console.log(name + ' ID is: ' + subID)                                       //           | 
-                        }                                                                               //------------|  
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            boardObj = data;
+            let cards = boardObj.cards;
+            let lists = boardObj.lists;
+            var subID = '';
+            if (type == 'cards') {
+                for (let i = 0; i < cards.length; i++) {
+                    if (cards[i].name.toLowerCase() == name.toLowerCase()) {
+                        subID = cards[i].id;
                     }
-
-                    let SubCollection = db.collection('Subscribers').doc(subID).get()
-                        .then(doc => {
-                            if (!doc.exists) {
-                                channel.send('You are not subbed to this item!')
-                                return;
-                            }
-                            else {
-
-                                if (doc.get(discID) == null) {    //checks to see if discordID exists
-                                    channel.send("You are not subbed to this item!");
-                                    return;
-                                }
-
-                                else {
-                                    let arrunion = db.collection('Subscribers').doc(subID).update({
-                                        [discID]: admin.firestore.FieldValue.delete()
-                                    });
-                                    channel.send("Successfully removed your subscription!");
-                                    return;
-                                }
-                            }
-                        })
-                        .catch(err => {
-                            console.log("Error getting document", err);
-                        });
-                }
-
-                else {
-                    //card name not found, most common error
-                    channel.send("Card was not found");
-                    return;
                 }
             }
-        }))
+            if (type == 'lists') {
+                for (let i = 0; i < lists.length; i++) {
+                    if (lists[i].name.toLowerCase() == name.toLowerCase()) {
+                        subID = lists[i].id;
+                    }
+                }
+            }
+            if (type == 'boards') {
+                if (boardObj.name.toLowerCase() == name.toLowerCase()) {
+                    subID = boardObj.id;
+                }
+            }
+            if (subID == '') {
+                channel.send("Card was not found");
+                return;
+            }
+
+            let SubCollection = db.collection('Subscribers').doc(subID).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        channel.send('You are not subbed to this item!')
+                        return;
+                    }
+                    else {
+
+                        if (doc.get(discID) == null) {    //checks to see if discordID exists
+                            channel.send("You are not subbed to this item!");
+                            return;
+                        }
+
+                        else {
+                            let arrunion = db.collection('Subscribers').doc(subID).update({
+                                [discID]: admin.firestore.FieldValue.delete()
+                            });
+                            channel.send("Successfully removed your subscription!");
+                            return;
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log("Error getting document", err);
+                });
+        });
 }
 
 function subscribe(name, type, act, discID, channel) {
@@ -165,86 +169,91 @@ function subscribe(name, type, act, discID, channel) {
         method: "GET"
     })
 
-        .then(response => response.body) //reads the trello JSON for data
-        .then(res => res.on('readable', () => {
-            let chunk;
-            while (null !== (chunk = res.read())) {
-                if (chunk.toString().includes(',"name":"' + name + '"')) {  //finds the ID for the card needed ------------|
-                    var slice = chunk.toString();                                                                  // | 
-                    var i = slice.indexOf('"' + type + '":');                                                         //  | 
-                    var j = slice.indexOf(',"name":"' + name + '"');                                                 //   |  
-                    while (i > j) {                                                                                 //    |
-                        var j = slice.indexOf(',"name":"' + name + '"', slice.indexOf(',"name":"' + name + '"') + 1);  //     |
-                    }                                                                                         //      |
-                    while (!slice.slice(j - 6, j).includes('{"id":')) {                                          //       | 
-                        j--;                                                                                //        | 
-                        if (slice.slice(j - 6, j).includes('{"id":')) {                                         //         |    
-                            var subID = slice.slice(j + 1, j + 25)                                            //          | 
-                            console.log(name + ' ID is: ' + subID)                                       //           | 
-                        }                                                                               //------------|  
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            boardObj = data;
+            let cards = boardObj.cards;
+            let lists = boardObj.lists;
+            var subID = '';
+            if (type == 'cards') {
+                for (let i = 0; i < cards.length; i++) {
+                    if (cards[i].name.toLowerCase() == name.toLowerCase()) {
+                        subID = cards[i].id;
                     }
-
-                    let SubCollection = db.collection('Subscribers').doc(subID).get()
-                        .then(doc => {
-                            if (!doc.exists) {
-                                db.collection('Subscribers').doc(subID).set({
-                                    name: [name]    //adds the name of element as a reference 
-                                });                 //then goes through code to add the discord subscriber down below
-
-                                if (doc.get(discID) == null) {    //checks to see if discordID exists
-                                    db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                        [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
-                                    })
-                                    channel.send("Success!")
-                                    return;
-                                }
-
-                                else {
-                                    //Document checking failed somehow
-                                    client.channels.get.chid.send("Error, Document Checking Goofed");
-                                    return;
-                                }
-                            }
-                            else {
-
-                                if (doc.get(discID) == null) {    //checks to see if discordID exists
-                                    db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                        [discID]: [act]    //"subscribed" is something we can store data in - Just a place holder
-                                    })
-                                    channel.send("Success!");
-                                    return;
-                                }
-
-                                else {
-                                    if (act == 'all') {
-                                        let arrunion = db.collection('Subscribers').doc(subID).update({
-                                            [discID]: admin.firestore.FieldValue.delete()
-                                        });
-                                        db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                            [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
-                                        })
-                                        channel.send("Success!")
-                                        return;
-                                    }
-                                    let arrunion = db.collection('Subscribers').doc(subID).update({
-                                        [discID]: admin.firestore.FieldValue.arrayUnion(act)
-                                    });
-                                    channel.send("Successfully added your subscription!");
-                                }
-                            }
-                        })
-                        .catch(err => {
-                            console.log("Error getting document", err);
-                        });
-                }
-
-                else {
-                    //card name not found, most common error
-                    channel.send("Card was not found");
-                    return;
                 }
             }
-        }))
+            if (type == 'lists') {
+                for (let i = 0; i < lists.length; i++) {
+                    if (lists[i].name.toLowerCase() == name.toLowerCase()) {
+                        subID = lists[i].id;
+                    }
+                }
+            }
+            if (type == 'boards') {
+                if (boardObj.name.toLowerCase() == name.toLowerCase()) {
+                    subID = boardObj.id;
+                }
+            }
+            if (subID == '') {
+                channel.send("Card was not found");
+                return;
+            }
+
+            let SubCollection = db.collection('Subscribers').doc(subID).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        db.collection('Subscribers').doc(subID).set({
+                            name: [name]    //adds the name of element as a reference 
+                        });                 //then goes through code to add the discord subscriber down below
+
+                        if (doc.get(discID) == null) {    //checks to see if discordID exists
+                            db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
+                                [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
+                            })
+                            channel.send("Success!")
+                            return;
+                        }
+
+                        else {
+                            //Document checking failed somehow
+                            client.channels.get.chid.send("Error, Document Checking Goofed");
+                            return;
+                        }
+                    }
+                    else {
+
+                        if (doc.get(discID) == null) {    //checks to see if discordID exists
+                            db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
+                                [discID]: [act]    //"subscribed" is something we can store data in - Just a place holder
+                            })
+                            channel.send("Success!");
+                            return;
+                        }
+
+                        else {
+                            if (act == 'all') {
+                                let arrunion = db.collection('Subscribers').doc(subID).update({
+                                    [discID]: admin.firestore.FieldValue.delete()
+                                });
+                                db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
+                                    [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
+                                })
+                                channel.send("Success!")
+                                return;
+                            }
+                            let arrunion = db.collection('Subscribers').doc(subID).update({
+                                [discID]: admin.firestore.FieldValue.arrayUnion(act)
+                            });
+                            channel.send("Successfully added your subscription!");
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log("Error getting document", err);
+                });
+        });
 }
 
 
@@ -503,7 +512,7 @@ function notifySubscribers(updates, subscribers) {
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
-        else if (subs.has(boardName)){
+        else if (subs.has(boardName)) {
             for (let [sub, actions] of subs.get(boardName)) {
                 if (Object.values(actions).indexOf('create') > -1 || Object.values(actions).indexOf('all') > -1) { // List is created in the board
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
@@ -519,13 +528,13 @@ function notifySubscribers(updates, subscribers) {
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
-        
-        else if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)){
+
+        else if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)) {
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
-        }  
-        
-        else if(translKey){
+        }
+
+        else if (translKey) {
             console.log(translKey + " has not been ignored or handled. Change done by " + updates[i].action.memberCreator.fullName);
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
