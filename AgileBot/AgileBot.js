@@ -33,7 +33,7 @@ const fs = require('fs');
 //Subscription stuff
 const fetch = require("node-fetch");
 const trelloURL = 'https://api.trello.com/1/board/5e45a94b60bbf0097f5d9d3c?cards=open&lists=open&checklists=all&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
-var actions = new Set(["update", "move", "create", "archive", "all"]);
+var actions = new Set(["update", "move", "create", "all"]);
 var IGNORE_ACT = new Set([
     'action_moved_card_higher', 'action_moved_card_lower', 'action_add_label_to_card',
     'action_sent_card_to_board', 'action_remove_label_from_card', 'action_delete_card',
@@ -101,7 +101,6 @@ function unsubscribe(name, type, discID, channel) {
     fetch(trelloURL, {
         method: "GET"
     })
-
         .then(response => {
             return response.json()
         })
@@ -109,44 +108,42 @@ function unsubscribe(name, type, discID, channel) {
             boardObj = data;
             let cards = boardObj.cards;
             let lists = boardObj.lists;
-            var subID = '';
+            var subID = ''; //The ID of the item we are retrieving 
             if (type == 'cards') {
-                for (let i = 0; i < cards.length; i++) {
+                for (let i = 0; i < cards.length; i++) {    //searches through all the cards
                     if (cards[i].name.toLowerCase() == name.toLowerCase()) {
                         subID = cards[i].id;
                     }
                 }
             }
             if (type == 'lists') {
-                for (let i = 0; i < lists.length; i++) {
+                for (let i = 0; i < lists.length; i++) {    //searches through all the lists
                     if (lists[i].name.toLowerCase() == name.toLowerCase()) {
                         subID = lists[i].id;
                     }
                 }
             }
-            if (type == 'boards') {
+            if (type == 'boards') { // Only 1 name on the board
                 if (boardObj.name.toLowerCase() == name.toLowerCase()) {
                     subID = boardObj.id;
                 }
             }
-            if (subID == '') {
+            if (subID == '') {  //only gets to this if the name is not in the board
                 channel.send("Card was not found");
                 return;
             }
 
             let SubCollection = db.collection('Subscribers').doc(subID).get()
                 .then(doc => {
-                    if (!doc.exists) {
+                    if (!doc.exists) {  //If the document for the item doesn't exist there is no subscription to it
                         channel.send('You are not subbed to this item!')
                         return;
                     }
                     else {
-
                         if (doc.get(discID) == null) {    //checks to see if discordID exists
                             channel.send("You are not subbed to this item!");
                             return;
                         }
-
                         else {
                             let arrunion = db.collection('Subscribers').doc(subID).update({
                                 [discID]: admin.firestore.FieldValue.delete()
@@ -163,11 +160,9 @@ function unsubscribe(name, type, discID, channel) {
 }
 
 function subscribe(name, type, act, discID, channel) {
-
     fetch(trelloURL, {
         method: "GET"
     })
-
         .then(response => {
             return response.json()
         })
@@ -177,69 +172,64 @@ function subscribe(name, type, act, discID, channel) {
             let lists = boardObj.lists;
             var subID = '';
             if (type == 'cards') {
-                for (let i = 0; i < cards.length; i++) {
+                for (let i = 0; i < cards.length; i++) {    //searches through all the cards
                     if (cards[i].name.toLowerCase() == name.toLowerCase()) {
                         subID = cards[i].id;
                     }
                 }
             }
             if (type == 'lists') {
-                for (let i = 0; i < lists.length; i++) {
+                for (let i = 0; i < lists.length; i++) {    //searches through all the lists
                     if (lists[i].name.toLowerCase() == name.toLowerCase()) {
                         subID = lists[i].id;
                     }
                 }
             }
-            if (type == 'boards') {
+            if (type == 'boards') { // Only 1 name on the board
                 if (boardObj.name.toLowerCase() == name.toLowerCase()) {
                     subID = boardObj.id;
                 }
             }
-            if (subID == '') {
+            if (subID == '') {  //only gets to this if the name is not in the board
                 channel.send("Card was not found");
                 return;
             }
-
             let SubCollection = db.collection('Subscribers').doc(subID).get()
                 .then(doc => {
                     if (!doc.exists) {
                         db.collection('Subscribers').doc(subID).set({
-                            name: [name]    //adds the name of element as a reference 
+                            name: [name]    //adds the name of item as a reference 
                         });                 //then goes through code to add the discord subscriber down below
-
                         if (doc.get(discID) == null) {    //checks to see if discordID exists
                             db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
                                 [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
                             })
-                            channel.send("Success!")
+                            channel.send("Successfully subscribed to " + name +"!")
                             return;
                         }
-
                         else {
-                            //Document checking failed somehow
+                            //Document checking failed somehow - should never hit this
                             client.channels.get.chid.send("Error, Document Checking Goofed");
                             return;
                         }
                     }
                     else {
-
                         if (doc.get(discID) == null) {    //checks to see if discordID exists
                             db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                [discID]: [act]    //"subscribed" is something we can store data in - Just a place holder
+                                [discID]: [act]
                             })
-                            channel.send("Success!");
+                            channel.send("Successfully subscribed to " + name +"!");
                             return;
                         }
-
                         else {
                             if (act == 'all') {
-                                let arrunion = db.collection('Subscribers').doc(subID).update({
-                                    [discID]: admin.firestore.FieldValue.delete()
+                                let arrunion = db.collection('Subscribers').doc(subID).update({ //if subscribed to everything,
+                                    [discID]: admin.firestore.FieldValue.delete()               //deletes all other subs to add 'all'
                                 });
                                 db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                    [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
+                                    [discID]: [act]
                                 })
-                                channel.send("Success!")
+                                channel.send("Successfully subscribed to " + name +"!")
                                 return;
                             }
                             let arrunion = db.collection('Subscribers').doc(subID).update({
@@ -405,85 +395,103 @@ function notifySubscribers(updates, subscribers) {
         // TODO: Figure out all the action that should be allowed to be subscribed to for card, list, board.
         if (subs.has(cardName)) {
             for (let [sub, actions] of subs.get(cardName)) {
-                if (Object.values(actions).indexOf('move') > -1 || Object.values(actions).indexOf('all') > -1) { // Card is created in list
+                if (Object.values(actions).indexOf('move') > -1 || Object.values(actions).indexOf('all') > -1) { // When the subscriber is either 'all' or 'move'
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
+                    //
+                    //  This Switch Statement parses through every possibility we want to process. Additional cases can be added on at will.
+                    //  Any actions we want to ignore needs to be added to the Global Var 'IGNORE_ACT'
+                    //  Any action with the translation key 'unknown' will not be processed. We can process them by additional means if necessary.
+                    //      -Console will produce the information needed to find the action that produced an unknown
+                    //      -The JSON trello sends can provide the specific information needed to parse it
+                    //
                     switch (translKey) {
                         case 'action_move_card_from_list_to_list':
                             NOTIFY_SUBSCRIBER.send('The new card titled `' + cardName + '` was moved to  `' + listName + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                            break;
+                        case 'unknown':
+                            console.log('Unknown update Occured, likely not important. User: ' + updates[i].action.memberCreator.fullName + ' List: '
+                                + listName + ' Board: ' + boardName);
                             break;
                     }
                 }
-                if (Object.values(actions).indexOf('update') > -1 || Object.values(actions).indexOf('all') > -1) { // Card is created in list
+                if (Object.values(actions).indexOf('update') > -1 || Object.values(actions).indexOf('all') > -1) { // When the subscriber is either 'all' or 'update'
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
+                    //
+                    //  This Switch Statement parses through every possibility we want to process. Additional cases can be added on at will.
+                    //  Any actions we want to ignore needs to be added to the Global Var 'IGNORE_ACT'
+                    //  Any action with the translation key 'unknown' will not be processed. We can process them by additional means if necessary.
+                    //      -Console will produce the information needed to find the action that produced an unknown
+                    //      -The JSON trello sends can provide the specific information needed to parse it
+                    //
                     switch (translKey) {
                         case 'action_comment_on_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` was updated with a comment  `' + updates[i].action.data.text + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_renamed_card': //Wont work for renaming a card not quite sure why.
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` was renamed to  `' + updates[i].action.data.card.name + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_added_a_due_date':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been assigned a due date of  `' + updates[i].action.data.card.due.split('T')[0] + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_changed_a_due_date':
-                            NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` due date has been changed to `' + updates[i].action.data.card.due.split('T')[0] + '` by `' +
+                            NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + "`'s due date has been changed to `" + updates[i].action.data.card.due.split('T')[0] + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_removed_a_due_date':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had its due date removed by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_archived_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been archived by  `' + updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_add_attachment_to_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been updated with an attachment by  `' + updates[i].action.memberCreator.fullName + '`. Attachment: '
                                 + '\n' + updates[i].action.data.attachment.url);
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_changed_description_of_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has added the description `' + updates[i].action.data.card.desc + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_add_checklist_to_card': //adding an item to checklist sends a null translation key, we can process it using checkItem but I dont see it necessary
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been given a checklist by  `' + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_remove_checklist_from_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had its checklist removed by `' + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_renamed_checkitem':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had a checklist item `' + updates[i].action.data.old.name + '` renamed to `'
                                 + updates[i].action.data.checkItem.name + '` by `' + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_completed_checkitem':
                             NOTIFY_SUBSCRIBER.send('The checklist item `' + updates[i].action.data.checkItem.name + '` on the card `' + cardName + '` has been marked completed by `'
                                 + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_marked_checkitem_incomplete':
                             NOTIFY_SUBSCRIBER.send('The checklist item `' + updates[i].action.data.checkItem.name + '` on the card `' + cardName + '` has been marked incomplete by `'
                                 + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'action_member_joined_card':
                             NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has added  `' + updates[i].action.data.member.name + '` to the cards members by `'
                                 + updates[i].action.memberCreator.fullName + '`');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
                             break;
                         case 'unknown':
                             console.log('Unknown update Occured, likely not important. User: ' + updates[i].action.memberCreator.fullName + ' Card: '
@@ -492,18 +500,28 @@ function notifySubscribers(updates, subscribers) {
                     }
                 }
             }
-            let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
+            let archiveUpdate = db.collection('archivedUpdates').add(updates[i]); 
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
         else if (subs.has(listName)) { // Someone is subscribed to this update, which is a change on a list
             for (let [sub, actions] of subs.get(listName)) {
                 if (Object.values(actions).indexOf('create') > -1 || Object.values(actions).indexOf('all') > -1) { // Card is created in list
                     let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
+                    //
+                    //  This Switch Statement parses through every possibility we want to process. Additional cases can be added on at will.
+                    //  Any actions we want to ignore needs to be added to the Global Var 'IGNORE_ACT'
+                    //  Any action with the translation key 'unknown' will not be processed. We can process them by additional means if necessary.
+                    //      -Console will produce the information needed to find the action that produced an unknown
+                    //      -The JSON trello sends can provide the specific information needed to parse it
+                    //
                     switch (translKey) {
                         case 'action_create_card':
                             NOTIFY_SUBSCRIBER.send('The new card titled `' + cardName + '` was created in list `' + listName + '` by `' +
                                 updates[i].action.memberCreator.fullName + '`.');
-                            console.log("ID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: createCard");
+                            break;
+                        case 'unknown':
+                            console.log('Unknown update Occured, likely not important. User: ' + updates[i].action.memberCreator.fullName + ' Board: '
+                                + boardName);
                             break;
                     }
                 }
@@ -528,12 +546,12 @@ function notifySubscribers(updates, subscribers) {
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
 
-        else if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)) {
+        else if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)) { //If nobody is subscribed to the card, list, or board it will archive the update
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
 
-        else if (translKey) {
+        else if (translKey) { //If the translation key has not be handled, it will produce a console message but not a discord message. Then archive the update.
             console.log(translKey + " has not been ignored or handled. Change done by " + updates[i].action.memberCreator.fullName);
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
@@ -600,7 +618,7 @@ client.on("message", async message => {
             return;
         }
         arg[1] = arg[1].toLowerCase();
-        if (!actions.has(arg[1])) {
+        if (!actions.has(arg[1]) || arg[1] == 'create') { //You cannot subscribe to any sort of card creation, you can sub to a list to see all cards create
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
@@ -638,7 +656,7 @@ client.on("message", async message => {
             return;
         }
         arg[1] = arg[1].toLowerCase();
-        if (!actions.has(arg[1])) {
+        if (!actions.has(arg[1]) || arg[1] == 'move') {  //There is no possible way for a board to move
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
