@@ -4,8 +4,7 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 require("firebase/auth");
 
-//const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
-var serviceAccount = require("C:/Users/Sal/Documents/Testing/agilebotrp-firebase-adminsdk-gs4o8-7af84966d8.json");
+const serviceAccount = require("../FirebaseFunctions/functions/agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
 
 
 const config = {
