@@ -346,7 +346,7 @@ function addCard(listId, cardName, channel) {
 function parseActions(translKey, cardName, listName, boardName, subMap, updates, i) {
     for (let [sub, actions] of subMap) {
         let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
-        if(NOTIFIED_SUBS.has(NOTIFY_SUBSCRIBER)){
+        if (NOTIFIED_SUBS.has(NOTIFY_SUBSCRIBER)) {
             return;
         }
         NOTIFIED_SUBS.add(NOTIFY_SUBSCRIBER)
