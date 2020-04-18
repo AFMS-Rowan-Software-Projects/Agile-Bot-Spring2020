@@ -5,7 +5,7 @@ const admin = require("firebase-admin");
 const firebase = require("firebase");
 
 // serviceAccount is our firebase SDK admin token
-const serviceAccount = require("./agilebotrp-firebase-adminsdk-gs4o8-1b430da2e7.json");
+const serviceAccount = require("./agilebotrp-firebase-adminsdk-gs4o8-f1d603a5b1.json");
 
 const config = {
     apiKey: "AIzaSyDiiVlK9NrAypYRD7YWvzVd4vpRDUEbZQU",
