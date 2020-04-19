@@ -260,10 +260,13 @@ function addComment2(name, msg, discUserId, channel) {
             var boardObj = data;
             var ourCard;
             let cards = boardObj.cards;
+            console.log("card name: "+name.toLowerCase());
             for (let i = 0; i < cards.length; i++) {
+                console.log(cards[i].name.toLowerCase());
                 if (cards[i].name.toLowerCase() == name.toLowerCase()) {
                     //card exists
                     ourCard = cards[i];
+                    console.log(ourCard);
                 }
             }
             if (ourCard) {
@@ -617,7 +620,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'cards', arg[1], message.author.id, message.channel);
     }
 
@@ -636,7 +639,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'lists', arg[1], message.author.id, message.channel)
     }
 
@@ -655,7 +658,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'boards', arg[1], message.author.id, message.channel)
     }
 
@@ -669,7 +672,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'cards', message.author.id, message.channel);
     }
 
@@ -683,7 +686,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'lists', message.author.id, message.channel);
     }
 
@@ -697,23 +700,26 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'boards', message.author.id, message.channel);
     }
 
     if (command == "comment") {
         var arg = args.join(' ').split(' ');
+        console.log("cname:"+arg[0]);
         if (arg[1] == null) {
             message.channel.send('Not enough arguments. Make sure you have the card name and your message.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
+        console.log("cname:"+arg[0]);
         let i = 1;
         let msg = "";
         while (arg[i]) {
             msg += arg[i] + " ";
             i++
-        }
+        } //arg[0] is the card name
+        console.log("cname:"+arg[0]);
         addComment2(arg[0], msg, message.author.id, message.channel);
     }
 
@@ -724,7 +730,9 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the list name and your card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        console.log("lname:"+arg[0]);
+        arg[0] = arg[0].replace(/_/g, ' ');
+        console.log("lname:"+arg[0]);
         let i = 1;
         let cardName = "";
         while (arg[i]) {
