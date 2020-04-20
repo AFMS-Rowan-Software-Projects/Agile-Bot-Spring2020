@@ -725,21 +725,24 @@ client.on("message", async message => {
 
     if (command == "addcard") {
         //message.channel.send("ye");
+        var list;
         var arg = args.join(' ').split(' ');
-        if (arg[1] == null) {
-            message.channel.send('Not enough arguments. Make sure you have the list name and your card name.')
+        if (arg[2] != null) {
+            message.channel.send('Too many arguments. List the card name then optional list name.')
             return;
         }
-        console.log("lname:"+arg[0]);
+        if (arg[0] == null) {
+            message.channel.send("Too little arguments. List the card nname then optional list name.");
+            return;
+        }        
         arg[0] = arg[0].replace(/_/g, ' ');
-        console.log("lname:"+arg[0]);
-        let i = 1;
-        let cardName = "";
-        while (arg[i]) {
-            cardName += arg[i] + " ";
-            i++
-        } //arg[0] is the list name
-        addCardToList(arg[0], cardName, message.author.id, message.channel);
+        if (arg[1] != null){
+            list = arg[1].replace(/_/g, ' ');
+        }
+        else{
+            list = 'Backlog';
+        }
+        addCardToList(list, arg[0], message.author.id, message.channel);
     }
 
     if (command === "ping") {
