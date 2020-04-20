@@ -491,6 +491,7 @@ function parseActions(translKey, cardName, listName, boardName, subMap, updates,
     for (let [sub, actions] of subMap) {
         let NOTIFY_SUBSCRIBER = client.users.find(x => x.id === sub);
         if (NOTIFIED_SUBS.has(NOTIFY_SUBSCRIBER)) {
+            console.log(NOTIFY_SUBSCRIBER + ' has been notified.')
             return;
         }
         NOTIFIED_SUBS.add(NOTIFY_SUBSCRIBER)
@@ -625,7 +626,6 @@ function parseActions(translKey, cardName, listName, boardName, subMap, updates,
 
 function notifySubscribers(updates, subscribers) {
     let subs = new Map;
-    NOTIFIED_SUBS = new Set;
     for (let [k, v] of Object.entries(subscribers)) { // Populate map with keys of cards/lists which currently have subscribers.
         for (let [k2, v2] of Object.entries(v)) {     // Key is the name of the trello object.
             if (k2 == 'name') {
@@ -649,6 +649,7 @@ function notifySubscribers(updates, subscribers) {
     }
 
     for (let i = 0; i < updates.length; i++) {
+        NOTIFIED_SUBS = new Set([]);
         let cardName = '';
         let listName = '';
         let boardName = '';
@@ -675,21 +676,24 @@ function notifySubscribers(updates, subscribers) {
         // Logic for cards and lists should be separate. For instance, you can't subscribe to a 'create' action on a card, since it
         // isn't created yet.
         // TODO: Figure out all the action that should be allowed to be subscribed to for card, list, board.
-        if (subs.has(cardName)) {
-            parseActions(translKey, cardName, listName, boardName, subs.get(cardName), updates, i)
+        if (subs.has(boardName)) {
+            parseActions(translKey, cardName, listName, boardName, subs.get(boardName), updates, i)
         }
         if (subs.has(listName)) {
             parseActions(translKey, cardName, listName, boardName, subs.get(listName), updates, i)
         }
-        if (subs.has(boardName)) {
-            parseActions(translKey, cardName, listName, boardName, subs.get(boardName), updates, i)
+        if (subs.has(cardName)) {
+            parseActions(translKey, cardName, listName, boardName, subs.get(cardName), updates, i)
         }
-        else if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)) { //If nobody is subscribed to the card, list, or board it will archive the update
+
+        if (!subs.has(cardName) || !subs.has(listName) || !subs.has(boardName)) { //If nobody is subscribed to the card, list, or board it will archive the update
+            console.log('No subscribers for the update.')
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
 
-        else if (translKey) { //If the translation key has not be handled, it will produce a console message but not a discord message. Then archive the update.
+        else{ //If the translation key has not be handled, it will produce a console message but not a discord message. Then archive the update.
+            console.log(translKey + ' has not been processed. Archiving update.')
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
