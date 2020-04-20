@@ -302,13 +302,13 @@ function addCardToList(listName, cardName, discUserId, channel) {
             return response.json()
         })
         .then(data => {
-            console.log("?");
+
             var boardObj = data;
             var ourList;
             let lists = boardObj.lists;
             for (let i = 0; i < lists.length; i++) {
                 if (lists[i].name.toLowerCase() == listName.toLowerCase()) {
-                    //card exists
+                    //list exists
 
                     ourList = lists[i];
                     console.log(ourList);
@@ -316,8 +316,35 @@ function addCardToList(listName, cardName, discUserId, channel) {
             }
             if (ourList) {
                 addCard(ourList.id, cardName, channel);
+
             }
-            return;
+            // If we default to backlog and don't find an existing one, make the backlog.
+            else if(ourList == undefined && listName == 'Backlog'){
+
+                fetch('https://api.trello.com/1/boards/5e45a94b60bbf0097f5d9d3c/lists?name=Backlog&pos=top&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                     method: 'POST'
+                    })
+                        .then(response => {
+                            console.log(
+                            `Response: ${response.status} ${response.statusText}`
+                            );
+
+                            channel.send("Backlog list created.");
+                            return response.json();
+                        })
+                        .then(data => {
+
+                            let newList = data;
+                            addCard(newList.id, cardName, channel);
+
+                        })
+                        .catch(err => console.error(err));
+                    }
+                    else {
+                        channel.send("List not found.");
+                    }
+
+                return;
         })
         .catch(err => {
             channel.send("something broke");
@@ -869,19 +896,29 @@ client.on("message", async message => {
 
     if (command == "addcard") {
         //message.channel.send("ye");
+
+        var list;
+
         var arg = args.join(' ').split(' ');
-        if (arg[1] == null) {
-            message.channel.send('Not enough arguments. Make sure you have the list name and your card name.')
+        if (arg[2] != null) {
+            message.channel.send('Too many arguments. List the card name then optional list name.')
             return;
         }
+
+        if (arg[0] == null) {
+            message.channel.send("Too little arguments. List the card nname then optional list name.");
+            return;
+        }        
         arg[0] = arg[0].replace('_', ' ');
-        let i = 1;
-        let cardName = "";
-        while (arg[i]) {
-            cardName += arg[i] + " ";
-            i++
-        } //arg[0] is the list name
-        addCardToList(arg[0], cardName, message.author.id, message.channel);
+
+        if (arg[1] != null){
+            list = arg[1].replace('_', ' ');
+        }
+        else{
+            list = 'Backlog';
+        }
+        
+        addCardToList(list, arg[0], message.author.id, message.channel);
     }
 
     if (command == "archive") {
@@ -1068,7 +1105,7 @@ client.on("message", async message => {
         }
         if (arg[0] == 'addcard'){
             embed.setTitle(';addcard <Card Name>');
-            embed.addField('Card Name','Name of the card you wish to add to the board, space seperated by "_"..');
+            embed.addField('Card Name','Name of the card you wish to add to the board, space seperated by "_".');
             message.channel.send({embed});
         }
         if (arg[0] == 'archive'){
