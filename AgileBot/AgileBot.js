@@ -1014,6 +1014,12 @@ client.on("message", async message => {
         embed.addField('addcard','Add a new card to a specific list.');
         embed.addField('archive','Archive a specific card');
         embed.addField('movecard','Move an existing card to a different list.');
+        embed.addField('ping','Calculates ping between sending a message and editing it.');
+        embed.addField('say','Say something temporary that will be deleted when read.');
+        embed.addField('kick','Remove a member from a list.');
+        embed.addField('ban','Remove a member from a list but only admins can use this command.');
+        embed.addField('purge','Remove all messages from all users in the channel, limited to 100');
+        embed.addField('help','Displays a list of bot commands to guide and assist the user.');
 
         message.channel.send({embed});
         }
@@ -1038,38 +1044,71 @@ client.on("message", async message => {
         }
         if (arg[0] == 'unsubcard'){
             embed.setTitle(';unsubcard <Card Name>');
-            embed.addField('Card Name','Name of the card you wish to unsubscribe to.');
+            embed.addField('Card Name','Name of the card you wish to unsubscribe to, space seperated by "_".');
             message.channel.send({embed});
         }
         if (arg[0] == 'unsublist'){
             embed.setTitle(';unsublist <List Name>');
-            embed.addField('List Name','Name of the list you wish to unsubscribe to.');
+            embed.addField('List Name','Name of the list you wish to unsubscribe to, space seperated by "_".');
             message.channel.send({embed});
         }
         if (arg[0] == 'unsubboard'){
             embed.setTitle(';unsubboard <Board Name>');
-            embed.addField('Board Name','Name of the board you wish to unsubscribe to.');
+            embed.addField('Board Name','Name of the board you wish to unsubscribe to, space seperated by "_".');
             message.channel.send({embed});
         }
         if (arg[0] == 'comment'){
-            embed.setTitle('');
+            embed.setTitle(';comment <Comment>');
+            embed.addField('Comment','Comment on the card you wish to comment under, space seperated by "_"..');
             message.channel.send({embed});
         }
         if (arg[0] == 'addcard'){
-            embed.setTitle('');
+            embed.setTitle(';addcard <Card Name>');
+            embed.addField('Card Name','Name of the card you wish to add to the board, space seperated by "_"..');
             message.channel.send({embed});
         }
         if (arg[0] == 'archive'){
             embed.setTitle(';archive <Card Name>');
-            embed.addField('Card Name','The name of the card you wish to archive, space seperated by "_"');
+            embed.addField('Card Name','The name of the card you wish to archive, space seperated by "_".');
             message.channel.send({embed});
         }
         if (arg[0] == 'movecard'){
             embed.setTitle(';move <Card Name> <List Name>');
-            embed.addField('Card Name', 'The name of the card you wish to move, space seperated by "_"');
-            embed.addField('List Name', 'Name of the list you wish to move the card to, space seperated by "_"');
+            embed.addField('Card Name', 'The name of the card you wish to move, space seperated by "_".');
+            embed.addField('List Name', 'Name of the list you wish to move the card to, space seperated by "_".');
             message.channel.send({embed});
         }
+        if (arg[0] == 'ping'){
+            embed.setTitle(';ping <Ping>');
+            message.channel.send({embed});
+        }
+        if (arg[0] == 'say'){
+            embed.setTitle(';say <Message>');
+            embed.addField('Message','The message you wish to deliver, space seperated by "_".');
+            message.channel.send({embed});
+        }
+        if (arg[0] == 'kick'){
+            embed.setTitle(';kick <Username> <Reason>"');
+            embed.addField('Username','The valid username of the user you wish to remove, space seperated by "_".');
+            embed.addField('Reason','The reasons for kicking said that you wish to remove, space seperated by "_".');
+            message.channel.send({embed});
+        }
+        if (arg[0] == 'ban'){
+            embed.setTitle(';ban <Username> <Reason>');
+            embed.addField('Username','The valid username of the user you wish to remove, space seperated by "_".');
+            embed.addField('Reason','The reasons for banning said that you wish to remove, space seperated by "_".');
+            message.channel.send({embed});
+        }
+        if (arg[0] == 'purge'){
+            embed.setTitle(';purge <Count>');
+            embed.addField('Count','Insert the number of messages up to 100 that you would like to purge.');
+            message.channel.send({embed});
+        }
+        if (arg[0] == 'help'){
+            embed.setTitle(';help <Help>');
+            message.channel.send({embed});
+        }
+        
     }
 
 
