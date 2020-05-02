@@ -319,32 +319,32 @@ function addCardToList(listName, cardName, discUserId, channel) {
 
             }
             // If we default to backlog and don't find an existing one, make the backlog.
-            else if(ourList == undefined && listName == 'Backlog'){
+            else if (ourList == undefined && listName == 'Backlog') {
 
                 fetch('https://api.trello.com/1/boards/5e45a94b60bbf0097f5d9d3c/lists?name=Backlog&pos=top&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
-                     method: 'POST'
-                    })
-                        .then(response => {
-                            console.log(
+                    method: 'POST'
+                })
+                    .then(response => {
+                        console.log(
                             `Response: ${response.status} ${response.statusText}`
-                            );
+                        );
 
-                            channel.send("Backlog list created.");
-                            return response.json();
-                        })
-                        .then(data => {
+                        channel.send("Backlog list created.");
+                        return response.json();
+                    })
+                    .then(data => {
 
-                            let newList = data;
-                            addCard(newList.id, cardName, channel);
+                        let newList = data;
+                        addCard(newList.id, cardName, channel);
 
-                        })
-                        .catch(err => console.error(err));
-                    }
-                    else {
-                        channel.send("List not found.");
-                    }
+                    })
+                    .catch(err => console.error(err));
+            }
+            else {
+                channel.send("List not found.");
+            }
 
-                return;
+            return;
         })
         .catch(err => {
             channel.send("something broke");
@@ -376,142 +376,142 @@ function archiveCard(cardName, channel) {
         method: "GET",
         headers: {
             'Accept': 'application/json'
-          }
-    })
-    .then(response => {
-        return response.json()
-    })
-    .then(data => {
-        console.log("?");
-        var boardObj = data;
-        var ourCard;
-        let cards = boardObj.cards;
-        for (let i = 0; i < cards.length; i++) {
-            if (cards[i].name.toLowerCase() == cardName.toLowerCase()) {
-                //card exists
-
-                ourCard = cards[i];
-                console.log(ourCard);
-                break;
-            }
         }
-        if (ourCard) {
-            
-            fetch('https://api.trello.com/1/cards/' + ourCard.id + '?closed=true&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
-                method: 'PUT',
-                headers: {
-                'Accept': 'application/json'
+    })
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            console.log("?");
+            var boardObj = data;
+            var ourCard;
+            let cards = boardObj.cards;
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i].name.toLowerCase() == cardName.toLowerCase()) {
+                    //card exists
+
+                    ourCard = cards[i];
+                    console.log(ourCard);
+                    break;
                 }
+            }
+            if (ourCard) {
+
+                fetch('https://api.trello.com/1/cards/' + ourCard.id + '?closed=true&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 })
-             .then(response => {
-                console.log(
-                `Response: ${response.status} ${response.statusText}`
-                );
+                    .then(response => {
+                        console.log(
+                            `Response: ${response.status} ${response.statusText}`
+                        );
 
-                if (response.status == "200") {
-                    channel.send("Successfully Archived Card")
-                }
-                return response.text();
+                        if (response.status == "200") {
+                            channel.send("Successfully Archived Card")
+                        }
+                        return response.text();
 
-            return response.text();
-            })
-            .then(text => console.log(text))
-            .catch(err => {
-                channel.send("something broke 2.0");
-                return;
-            });
+                        return response.text();
+                    })
+                    .then(text => console.log(text))
+                    .catch(err => {
+                        channel.send("something broke 2.0");
+                        return;
+                    });
 
             }
-        else {
-            channel.send("Card not found.")
-        }
+            else {
+                channel.send("Card not found.")
+            }
             return;
-    })
-    .catch(err => {
-        channel.send("something broke");
-        return;
-    });
+        })
+        .catch(err => {
+            channel.send("something broke");
+            return;
+        });
 }
 
-function moveCardToList(cardName, listName, channel){
+function moveCardToList(cardName, listName, channel) {
 
     fetch(trelloURL, {
         method: "GET",
         headers: {
             'Accept': 'application/json'
-          }
-    })
-    .then(response => {
-        return response.json()
-    })
-    .then(data => {
-        let boardObj = data;
-        var ourCard, ourList;
-        let cards = boardObj.cards;
-        let lists = boardObj.lists;
-        for (let i = 0; i < cards.length; i++){
-            if (cards[i].name.toLowerCase() == cardName.toLowerCase()) {
-                //card exists
-
-                ourCard = cards[i];
-                console.log(ourCard);
-                break;
-            }
         }
-        for (let i = 0; i < lists.length; i++){
-            if (lists[i].name.toLowerCase() == listName.toLowerCase()) {
-                //card exists
+    })
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            let boardObj = data;
+            var ourCard, ourList;
+            let cards = boardObj.cards;
+            let lists = boardObj.lists;
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i].name.toLowerCase() == cardName.toLowerCase()) {
+                    //card exists
 
-                ourList = lists[i];
-                console.log(ourList);
-                break;
+                    ourCard = cards[i];
+                    console.log(ourCard);
+                    break;
+                }
             }
-        }
+            for (let i = 0; i < lists.length; i++) {
+                if (lists[i].name.toLowerCase() == listName.toLowerCase()) {
+                    //card exists
 
-        if(ourCard){
+                    ourList = lists[i];
+                    console.log(ourList);
+                    break;
+                }
+            }
 
-            if(ourList){
+            if (ourCard) {
 
-                fetch('https://api.trello.com/1/cards/' + ourCard.id + '?idList=' + ourList.id + '&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
-                    method: 'PUT',
-                    headers: {
-                    'Accept': 'application/json'
-                    }
+                if (ourList) {
+
+                    fetch('https://api.trello.com/1/cards/' + ourCard.id + '?idList=' + ourList.id + '&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     })
-                 .then(response => {
-                    console.log(
-                    `Response: ${response.status} ${response.statusText}`
-                    );
-    
-                    if (response.status == "200") {
-                        channel.send("Successfully Moved Card")
-                    }
-                    return response.text();
-    
-                return response.text();
-                })
-                .then(text => console.log(text))
-                .catch(err => {
-                    channel.send("something broke 2.0");
-                    return;
-                }); 
+                        .then(response => {
+                            console.log(
+                                `Response: ${response.status} ${response.statusText}`
+                            );
+
+                            if (response.status == "200") {
+                                channel.send("Successfully Moved Card")
+                            }
+                            return response.text();
+
+                            return response.text();
+                        })
+                        .then(text => console.log(text))
+                        .catch(err => {
+                            channel.send("something broke 2.0");
+                            return;
+                        });
+
+                }
+                else {
+                    channel.send("List not found.")
+                }
 
             }
-            else{
-                channel.send("List not found.")
+            else {
+                channel.send("Card not found.")
             }
 
-        }
-        else{
-            channel.send("Card not found.")
-        }
 
-        
-    })
-    .catch(err => {
-        channel.send("something broke");
-        return;
-    });
+        })
+        .catch(err => {
+            channel.send("something broke");
+            return;
+        });
 }
 
 function parseActions(translKey, cardName, listName, boardName, subMap, updates, i) {
@@ -908,16 +908,16 @@ client.on("message", async message => {
         if (arg[0] == null) {
             message.channel.send("Too little arguments. List the card nname then optional list name.");
             return;
-        }        
+        }
         arg[0] = arg[0].replace('_', ' ');
 
-        if (arg[1] != null){
+        if (arg[1] != null) {
             list = arg[1].replace('_', ' ');
         }
-        else{
+        else {
             list = 'Backlog';
         }
-        
+
         addCardToList(list, arg[0], message.author.id, message.channel);
     }
 
@@ -933,11 +933,11 @@ client.on("message", async message => {
             return;
         }
         arg[0] = arg[0].replace('_', ' ');
-        
+
         archiveCard(arg[0], message.channel);
     }
 
-    if (command == "movecard"){
+    if (command == "movecard") {
 
         var arg = args.join(' ').split(' ');
         if (arg[0] == null) {
@@ -954,7 +954,7 @@ client.on("message", async message => {
         }
         arg[0] = arg[0].replace('_', ' ');
         arg[1] = arg[1].replace('_', ' ');
-        
+
         moveCardToList(arg[0], arg[1], message.channel);
     }
 
@@ -1043,113 +1043,113 @@ client.on("message", async message => {
 
         var arg = args.join(' ').split(' ');
 
-        if (args.length == 0){
-        embed.setTitle('Type ;help <command name> to learn more about the given command.');
-        embed.addField('subcard','Subscribe to a specific card.');
-        embed.addField('sublist','Subscribe to a specific list.');
-        embed.addField('subboard','Subscribe to a specific board.');
-        embed.addField('unsubcard','Unsubscribe to a subscribed card.');
-        embed.addField('unsublist','Unsubscribe to a subscribed list.');
-        embed.addField('unsubboard','Unsubscribe to a subscribed board.');
-        embed.addField('comment','Add a comment to a specific card.');
-        embed.addField('addcard','Add a new card to a specific list.');
-        embed.addField('archive','Archive a specific card');
-        embed.addField('movecard','Move an existing card to a different list.');
-        embed.addField('ping','Calculates ping between sending a message and editing it.');
-        embed.addField('say','Say something temporary that will be deleted when read.');
-        embed.addField('kick','Remove a member from a list.');
-        embed.addField('ban','Remove a member from a list but only admins can use this command.');
-        embed.addField('purge','Remove all messages from all users in the channel, limited to 100');
-        embed.addField('help','Displays a list of bot commands to guide and assist the user.');
+        if (args.length == 0) {
+            embed.setTitle('Type ;help <command name> to learn more about the given command.');
+            embed.addField('subcard', 'Subscribe to a specific card.');
+            embed.addField('sublist', 'Subscribe to a specific list.');
+            embed.addField('subboard', 'Subscribe to a specific board.');
+            embed.addField('unsubcard', 'Unsubscribe to a subscribed card.');
+            embed.addField('unsublist', 'Unsubscribe to a subscribed list.');
+            embed.addField('unsubboard', 'Unsubscribe to a subscribed board.');
+            embed.addField('comment', 'Add a comment to a specific card.');
+            embed.addField('addcard', 'Add a new card to a specific list.');
+            embed.addField('archive', 'Archive a specific card');
+            embed.addField('movecard', 'Move an existing card to a different list.');
+            embed.addField('ping', 'Calculates ping between sending a message and editing it.');
+            embed.addField('say', 'Say something temporary that will be deleted when read.');
+            embed.addField('kick', 'Remove a member from a list.');
+            embed.addField('ban', 'Remove a member from a list but only admins can use this command.');
+            embed.addField('purge', 'Remove all messages from all users in the channel, limited to 100');
+            embed.addField('help', 'Displays a list of bot commands to guide and assist the user.');
 
-        message.channel.send({embed});
+            message.channel.send({ embed });
         }
 
-        if (arg[0] == 'subcard'){
+        if (arg[0] == 'subcard') {
             embed.setTitle(';subcard <Card Name> <Action>');
-            embed.addField('Card Name','Name of the card you wish to subscribe to, space seperated by "_".');
-            embed.addField('Action','Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
-            message.channel.send({embed});
+            embed.addField('Card Name', 'Name of the card you wish to subscribe to, space seperated by "_".');
+            embed.addField('Action', 'Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'sublist'){
+        if (arg[0] == 'sublist') {
             embed.setTitle(';sublist <List Name> <Action>');
-            embed.addField('List Name','Name of the lsit you wish to subscribe to, space seperated by "_".');
-            embed.addField('Action','Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
-            message.channel.send({embed});
+            embed.addField('List Name', 'Name of the lsit you wish to subscribe to, space seperated by "_".');
+            embed.addField('Action', 'Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'subboard'){
+        if (arg[0] == 'subboard') {
             embed.setTitle(';subboard <Board Name> <Action>');
-            embed.addField('Board Name','Name of the board you wish to subscribe to, space seperated by "_".');
-            embed.addField('Action','Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
-            message.channel.send({embed});
+            embed.addField('Board Name', 'Name of the board you wish to subscribe to, space seperated by "_".');
+            embed.addField('Action', 'Describes what action you wish to be updated on, can be one of: update, move, create, or all.');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'unsubcard'){
+        if (arg[0] == 'unsubcard') {
             embed.setTitle(';unsubcard <Card Name>');
-            embed.addField('Card Name','Name of the card you wish to unsubscribe to, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Card Name', 'Name of the card you wish to unsubscribe to, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'unsublist'){
+        if (arg[0] == 'unsublist') {
             embed.setTitle(';unsublist <List Name>');
-            embed.addField('List Name','Name of the list you wish to unsubscribe to, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('List Name', 'Name of the list you wish to unsubscribe to, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'unsubboard'){
+        if (arg[0] == 'unsubboard') {
             embed.setTitle(';unsubboard <Board Name>');
-            embed.addField('Board Name','Name of the board you wish to unsubscribe to, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Board Name', 'Name of the board you wish to unsubscribe to, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'comment'){
+        if (arg[0] == 'comment') {
             embed.setTitle(';comment <Comment>');
-            embed.addField('Comment','Comment on the card you wish to comment under, space seperated by "_"..');
-            message.channel.send({embed});
+            embed.addField('Comment', 'Comment on the card you wish to comment under, space seperated by "_"..');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'addcard'){
+        if (arg[0] == 'addcard') {
             embed.setTitle(';addcard <Card Name>');
-            embed.addField('Card Name','Name of the card you wish to add to the board, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Card Name', 'Name of the card you wish to add to the board, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'archive'){
+        if (arg[0] == 'archive') {
             embed.setTitle(';archive <Card Name>');
-            embed.addField('Card Name','The name of the card you wish to archive, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Card Name', 'The name of the card you wish to archive, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'movecard'){
+        if (arg[0] == 'movecard') {
             embed.setTitle(';move <Card Name> <List Name>');
             embed.addField('Card Name', 'The name of the card you wish to move, space seperated by "_".');
             embed.addField('List Name', 'Name of the list you wish to move the card to, space seperated by "_".');
-            message.channel.send({embed});
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'ping'){
+        if (arg[0] == 'ping') {
             embed.setTitle(';ping <Ping>');
-            message.channel.send({embed});
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'say'){
+        if (arg[0] == 'say') {
             embed.setTitle(';say <Message>');
-            embed.addField('Message','The message you wish to deliver, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Message', 'The message you wish to deliver, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'kick'){
+        if (arg[0] == 'kick') {
             embed.setTitle(';kick <Username> <Reason>"');
-            embed.addField('Username','The valid username of the user you wish to remove, space seperated by "_".');
-            embed.addField('Reason','The reasons for kicking said that you wish to remove, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Username', 'The valid username of the user you wish to remove, space seperated by "_".');
+            embed.addField('Reason', 'The reasons for kicking said that you wish to remove, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'ban'){
+        if (arg[0] == 'ban') {
             embed.setTitle(';ban <Username> <Reason>');
-            embed.addField('Username','The valid username of the user you wish to remove, space seperated by "_".');
-            embed.addField('Reason','The reasons for banning said that you wish to remove, space seperated by "_".');
-            message.channel.send({embed});
+            embed.addField('Username', 'The valid username of the user you wish to remove, space seperated by "_".');
+            embed.addField('Reason', 'The reasons for banning said that you wish to remove, space seperated by "_".');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'purge'){
+        if (arg[0] == 'purge') {
             embed.setTitle(';purge <Count>');
-            embed.addField('Count','Insert the number of messages up to 100 that you would like to purge.');
-            message.channel.send({embed});
+            embed.addField('Count', 'Insert the number of messages up to 100 that you would like to purge.');
+            message.channel.send({ embed });
         }
-        if (arg[0] == 'help'){
+        if (arg[0] == 'help') {
             embed.setTitle(';help <Help>');
-            message.channel.send({embed});
+            message.channel.send({ embed });
         }
-        
+
     }
 
 
