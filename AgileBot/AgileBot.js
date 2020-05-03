@@ -106,7 +106,7 @@ function unsubscribe(name, type, discID, channel) {
             return response.json()
         })
         .then(data => {
-            boardObj = data;
+            let boardObj = data;
             let cards = boardObj.cards;
             let lists = boardObj.lists;
             var subID = ''; //The ID of the item we are retrieving 
@@ -160,91 +160,7 @@ function unsubscribe(name, type, discID, channel) {
         });
 }
 
-function subscribe(name, type, act, discID, channel) {
-    fetch(trelloURL, {
-        method: "GET"
-    })
-        .then(response => {
-            return response.json()
-        })
-        .then(data => {
-            boardObj = data;
-            let cards = boardObj.cards;
-            let lists = boardObj.lists;
-            var subID = '';
-            if (type == 'cards') {
-                for (let i = 0; i < cards.length; i++) {    //searches through all the cards
-                    if (cards[i].name.toLowerCase() == name.toLowerCase()) {
-                        subID = cards[i].id;
-                    }
-                }
-            }
-            if (type == 'lists') {
-                for (let i = 0; i < lists.length; i++) {    //searches through all the lists
-                    if (lists[i].name.toLowerCase() == name.toLowerCase()) {
-                        subID = lists[i].id;
-                    }
-                }
-            }
-            if (type == 'boards') { // Only 1 name on the board
-                if (boardObj.name.toLowerCase() == name.toLowerCase()) {
-                    subID = boardObj.id;
-                }
-            }
-            if (subID == '') {  //only gets to this if the name is not in the board
-                channel.send("Card was not found");
-                return;
-            }
-            let SubCollection = db.collection('Subscribers').doc(subID).get()
-                .then(doc => {
-                    if (!doc.exists) {
-                        db.collection('Subscribers').doc(subID).set({
-                            name: [name]    //adds the name of item as a reference 
-                        });                 //then goes through code to add the discord subscriber down below
-                        if (doc.get(discID) == null) {    //checks to see if discordID exists
-                            db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                [discID]: [act]     //"subscribed" is something we can store data in - Just a place holder
-                            })
-                            channel.send("Successfully subscribed to " + name + "!")
-                            return;
-                        }
-                        else {
-                            //Document checking failed somehow - should never hit this
-                            client.channels.get.chid.send("Error, Document Checking Goofed");
-                            return;
-                        }
-                    }
-                    else {
-                        if (doc.get(discID) == null) {    //checks to see if discordID exists
-                            db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                [discID]: [act]
-                            })
-                            channel.send("Successfully subscribed to " + name + "!");
-                            return;
-                        }
-                        else {
-                            if (act == 'all') {
-                                let arrunion = db.collection('Subscribers').doc(subID).update({ //if subscribed to everything,
-                                    [discID]: admin.firestore.FieldValue.delete()               //deletes all other subs to add 'all'
-                                });
-                                db.collection('Subscribers').doc(subID).update({    // searches doc for the id of the trello card
-                                    [discID]: [act]
-                                })
-                                channel.send("Successfully subscribed to " + name + "!")
-                                return;
-                            }
-                            let arrunion = db.collection('Subscribers').doc(subID).update({
-                                [discID]: admin.firestore.FieldValue.arrayUnion(act)
-                            });
-                            channel.send("Successfully added your subscription!");
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.log("Error getting document", err);
-                });
-        });
-}
+
 
 
 function addComment2(name, msg, discUserId, channel) {
