@@ -30,24 +30,6 @@ const db = admin.firestore();
 const auth = firebase.auth();
 const fs = require('fs');
 
-exports.webhookTest = functions.https.onRequest((request, response) => {
-
-    //log any request body in the function logs
-    console.log(request.body);
-
-    //takes only post requests and pushes the body into the firestore database
-    if(request.method === "POST") {
-      if(request.body) {
-        db.collection('trelloUpdateTest').add(request.body);
-      }
-    }
-    
-
-    //return the appropriate 200 status code for the webhook and a message
-    return response.status(200).send("if there is a god, help me now");
-
-});
-
 exports.addUpdates = functions.https.onRequest((request, response) => {
 
       //log any request body in the function logs
