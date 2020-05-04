@@ -29,10 +29,14 @@ const db = admin.firestore();
 const fbAuth = firebase.auth();
 const fs = require('fs');
 
+//Auth stuff
+const trelloBoard = '5e45a94b60bbf0097f5d9d3c';
+const trelloKey = 'f5f7b5f6456619c81fd348f7b69d4e08';
+const trelloToken = '7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
 
 //Subscription stuff
 const fetch = require("node-fetch");
-const trelloURL = 'https://api.trello.com/1/board/5e45a94b60bbf0097f5d9d3c?cards=open&lists=open&checklists=all&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453';
+const trelloURL = 'https://api.trello.com/1/board/' + trelloBoard + '?cards=open&lists=open&checklists=all&key=' + trelloKey + '&token=' + trelloToken;
 var actions = new Set(["update", "move", "create", "all"]);
 var IGNORE_ACT = new Set([
     'action_moved_card_higher', 'action_moved_card_lower', 'action_add_label_to_card',
@@ -276,7 +280,7 @@ function addComment2(name, msg, discUserId, channel) {
 }
 
 function addCommentToCard(cardId, text, channel) {
-    fetch('https://api.trello.com/1/cards/' + cardId + '/actions/comments?text=' + text + '&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+    fetch('https://api.trello.com/1/cards/' + cardId + '/actions/comments?text=' + text + '&key=' + trelloKey + '&token=' + trelloToken, {
         method: 'POST'
     })
         .then(response => {
@@ -321,7 +325,7 @@ function addCardToList(listName, cardName, discUserId, channel) {
             // If we default to backlog and don't find an existing one, make the backlog.
             else if (ourList == undefined && listName == 'Backlog') {
 
-                fetch('https://api.trello.com/1/boards/5e45a94b60bbf0097f5d9d3c/lists?name=Backlog&pos=top&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                fetch('https://api.trello.com/1/boards/' + trelloBoard + '/lists?name=Backlog&pos=top&key=' + trelloKey + '&token=' + trelloToken, {
                     method: 'POST'
                 })
                     .then(response => {
@@ -353,7 +357,7 @@ function addCardToList(listName, cardName, discUserId, channel) {
 }
 
 function addCard(listId, cardName, channel) {
-    fetch('https://api.trello.com/1/cards?idList=' + listId + '&name=' + cardName + '&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+    fetch('https://api.trello.com/1/cards?idList=' + listId + '&name=' + cardName + '&key=' + trelloKey + '&token=' + trelloToken, {
         method: 'POST'
     })
         .then(response => {
@@ -397,7 +401,7 @@ function archiveCard(cardName, channel) {
             }
             if (ourCard) {
 
-                fetch('https://api.trello.com/1/cards/' + ourCard.id + '?closed=true&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                fetch('https://api.trello.com/1/cards/' + ourCard.id + '?closed=true&key=' + trelloKey + '&token=' + trelloToken, {
                     method: 'PUT',
                     headers: {
                         'Accept': 'application/json'
@@ -472,7 +476,7 @@ function moveCardToList(cardName, listName, channel) {
 
                 if (ourList) {
 
-                    fetch('https://api.trello.com/1/cards/' + ourCard.id + '?idList=' + ourList.id + '&key=f5f7b5f6456619c81fd348f7b69d4e08&token=7038d4016f578c077da4b282d74a8aad0aa8cb068d9bd2b364a22e853384d453', {
+                    fetch('https://api.trello.com/1/cards/' + ourCard.id + '?idList=' + ourList.id + '&key=' + trelloKey + '&token=' + trelloToken, {
                         method: 'PUT',
                         headers: {
                             'Accept': 'application/json'
