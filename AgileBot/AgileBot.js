@@ -85,7 +85,7 @@ var interval = setInterval(async function () {
     })
     notifySubscribers(theTrelloUpdates, trelloSubscribers);
     // doUpdateLogic(theTrelloUpdates);
-}, 30 * 1000); // Check every minute
+}, 10 * 1000); // Check every minute
 
 
 function doUpdateLogic(updates) {
@@ -686,9 +686,18 @@ function notifySubscribers(updates, subscribers) {
         let cardName = '';
         let listName = '';
         let boardName = '';
+
+        let action = updates[i].action.type;
+        let translKey = updates[i].action.display.translationKey; // For specific updates in future
+        if (IGNORE_ACT.has(translKey)) {
+            let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
+            let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
+            continue;
+        }
+
         if ('card' in updates[i].action.data) { // If action was done on a card, 'cardName' and 'cardList' will be updated        
             cardName = updates[i].action.data.card.name;
-            if(updates[i].action.data.old.name){
+            if(translKey == "action_renamed_card"){
                 cardName = updates[i].action.data.old.name;
             }
         }
@@ -701,14 +710,9 @@ function notifySubscribers(updates, subscribers) {
         if ('board' in updates[i].action.data) {
             boardName = updates[i].action.data.board.name;
         }
-        let action = updates[i].action.type;
-        let translKey = updates[i].action.display.translationKey; // For specific updates in future
+        
 
-        if (IGNORE_ACT.has(translKey)) {
-            let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
-            let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
-            return;
-        }
+        
         // Logic for cards and lists should be separate. For instance, you can't subscribe to a 'create' action on a card, since it
         // isn't created yet.
         // TODO: Figure out all the action that should be allowed to be subscribed to for card, list, board.
@@ -803,7 +807,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'cards', arg[1], message.author.id, message.channel);
     }
 
@@ -822,7 +826,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'lists', arg[1], message.author.id, message.channel)
     }
 
@@ -841,7 +845,7 @@ client.on("message", async message => {
             message.channel.send('Invalid subsciption type. Please use <make help command> to see the approved actions')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         subscribe(arg[0], 'boards', arg[1], message.author.id, message.channel)
     }
 
@@ -855,7 +859,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'cards', message.author.id, message.channel);
     }
 
@@ -869,7 +873,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'lists', message.author.id, message.channel);
     }
 
@@ -883,7 +887,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         unsubscribe(arg[0], 'boards', message.author.id, message.channel);
     }
 
@@ -893,7 +897,7 @@ client.on("message", async message => {
             message.channel.send('Not enough arguments. Make sure you have the card name and your message.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
         let i = 1;
         let msg = "";
         while (arg[i]) {
@@ -918,10 +922,10 @@ client.on("message", async message => {
             message.channel.send("Too little arguments. List the card nname then optional list name.");
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
 
         if (arg[1] != null) {
-            list = arg[1].replace('_', ' ');
+            list = arg[1].replace(/_/g, ' ');
         }
         else {
             list = 'Backlog';
@@ -941,7 +945,7 @@ client.on("message", async message => {
             message.channel.send('Too many arguments. Use the name of the card you wish to archive.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
 
         archiveCard(arg[0], message.channel);
     }
@@ -961,8 +965,8 @@ client.on("message", async message => {
             message.channel.send('Too many arguments. Type ;help for details.')
             return;
         }
-        arg[0] = arg[0].replace('_', ' ');
-        arg[1] = arg[1].replace('_', ' ');
+        arg[0] = arg[0].replace(/_/g, ' ');
+        arg[1] = arg[1].replace(/_/g, ' ');
 
         moveCardToList(arg[0], arg[1], message.channel);
     }
