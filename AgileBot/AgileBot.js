@@ -94,7 +94,6 @@ function doUpdateLogic(updates) {
                     anUpdate.action.data.listAfter.name + '` by `' + anUpdate.action.memberCreator.fullName + '`.');
                 break;
         }
-
     }
 }
 
@@ -554,69 +553,72 @@ function parseActions(translKey, cardName, listName, boardName, subMap, updates,
                 case 'action_comment_on_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` was updated with a comment  `' + updates[i].action.data.text + '` by `' +
                         updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", Comment: " + updates[i].action.data.text);
                     break;
                 case 'action_renamed_card': //Wont work for renaming a card not quite sure why.
-                    NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` was renamed to  `' + updates[i].action.data.card.name + '` by `' +
+                    NOTIFY_SUBSCRIBER.send('The card titled `' + updates[i].action.data.old.name + '` was renamed to  `' + updates[i].action.data.card.name + '` by `' +
                         updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", OldName: " + cardName + ", New name: " + updates[i].action.data.card.name + ",  Action: " + translKey);
+                    db.collection('Subscribers').doc(updates[i].action.data.card.id).update({    // searches doc for the id of the trello card
+                        'name': [updates[i].action.data.card.name]
+                    })
                     break;
                 case 'action_added_a_due_date':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been assigned a due date of  `' + updates[i].action.data.card.due.split('T')[0] + '` by `' +
                         updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", DueDate: " + updates[i].action.data.card.due.split('T')[0]);
                     break;
                 case 'action_changed_a_due_date':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + "`'s due date has been changed to `" + updates[i].action.data.card.due.split('T')[0] + '` by `' +
                         updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", updatedDueDate: " + updates[i].action.data.card.due.split('T')[0]);
                     break;
                 case 'action_removed_a_due_date':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had its due date removed by `' +
                         updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", RemovedDate");
                     break;
                 case 'action_archived_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been archived by  `' + updates[i].action.memberCreator.fullName + '`.');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", Archived");
                     break;
                 case 'action_add_attachment_to_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been updated with an attachment by  `' + updates[i].action.memberCreator.fullName + '`. Attachment: '
                         + '\n' + updates[i].action.data.attachment.url);
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", Attached");
                     break;
                 case 'action_changed_description_of_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has added the description `' + updates[i].action.data.card.desc + '` by `' +
                         updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", Description: " + updates[i].action.data.card.desc);
                     break;
                 case 'action_add_checklist_to_card': //adding an item to checklist sends a null translation key, we can process it using checkItem but I dont see it necessary
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has been given a checklist by  `' + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", ChecklistAdded");
                     break;
                 case 'action_remove_checklist_from_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had its checklist removed by `' + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", Checklist Removed");
                     break;
                 case 'action_renamed_checkitem':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has had a checklist item `' + updates[i].action.data.old.name + '` renamed to `'
                         + updates[i].action.data.checkItem.name + '` by `' + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", OldName: " + updates[i].action.data.old.name);
                     break;
                 case 'action_completed_checkitem':
                     NOTIFY_SUBSCRIBER.send('The checklist item `' + updates[i].action.data.checkItem.name + '` on the card `' + cardName + '` has been marked completed by `'
                         + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", CompleteItem: " + updates[i].action.data.checkItem.name);
                     break;
                 case 'action_marked_checkitem_incomplete':
                     NOTIFY_SUBSCRIBER.send('The checklist item `' + updates[i].action.data.checkItem.name + '` on the card `' + cardName + '` has been marked incomplete by `'
                         + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", IncompleteItem: " + updates[i].action.data.checkItem.name);
                     break;
                 case 'action_member_joined_card':
                     NOTIFY_SUBSCRIBER.send('The card titled `' + cardName + '` has added  `' + updates[i].action.data.member.name + '` to the cards members by `'
                         + updates[i].action.memberCreator.fullName + '`');
-                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey);
+                    console.log("UserID: " + sub + ", List: " + listName + ", Card: " + cardName + ", Action: " + translKey + ", User added: " + updates[i].action.data.member.name);
                     break;
                 case 'unknown':
                     console.log('Unknown update Occured, likely not important. User: ' + updates[i].action.memberCreator.fullName + ' Card: '
@@ -682,6 +684,9 @@ function notifySubscribers(updates, subscribers) {
         let boardName = '';
         if ('card' in updates[i].action.data) { // If action was done on a card, 'cardName' and 'cardList' will be updated        
             cardName = updates[i].action.data.card.name;
+            if(updates[i].action.data.old.name){
+                cardName = updates[i].action.data.old.name;
+            }
         }
         if ('list' in updates[i].action.data) { // If action was done on a list, only 'listName' will be updated
             listName = updates[i].action.data.list.name;
@@ -719,7 +724,7 @@ function notifySubscribers(updates, subscribers) {
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
         }
 
-        else{ //If the translation key has not be handled, it will produce a console message but not a discord message. Then archive the update.
+        else { //If the translation key has not be handled, it will produce a console message but not a discord message. Then archive the update.
             console.log(translKey + ' has not been processed. Archiving update.')
             let archiveUpdate = db.collection('archivedUpdates').add(updates[i]);
             let deleteUpdate = db.collection('trelloUpdateTest').doc(updates[i].docID).delete();
