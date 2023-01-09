@@ -8,8 +8,8 @@
     "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
     "discord.js": "^11.6.4",
     "firebase": "^7.14.1",
-    "firebase-admin": "^8.9.2",
-    "firebase-functions": "^3.3.0",
+    "firebase-admin": "^11.4.1",
+    "firebase-functions": "^3.24.1",
     "winston": "^3.2.1"
   }
 }
